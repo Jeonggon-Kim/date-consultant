@@ -106,7 +106,7 @@ export default function Home() {
 
       // 타임아웃 설정 (10초)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("타임아웃")), 10000)
+        setTimeout(() => reject(new Error("타임아웃")), 1000)
       );
 
       console.log("userId:", userId);
