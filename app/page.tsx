@@ -18,8 +18,11 @@ const FREE_MESSAGE_LIMIT = 10; // 무료 사용자 메시지 제한 (현재는 �
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [dataLoading, setDataLoading] = useState(true);
+
+  // ❗ 로딩은 더 이상 UI를 막지 않는다 (초기값 false)
+  const [authLoading, setAuthLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
@@ -43,9 +46,18 @@ export default function Home() {
     const initAuth = async () => {
       try {
         console.log("[초기화] 인증 상태 확인 시작");
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+
+        // 필요하면 여기서 true로 잠깐 바꿔도 됨 (UI 안막음)
+        setAuthLoading(true);
+        setDataLoading(true);
+
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("[초기화] 세션 조회 에러:", error);
+        }
+
+        const session = data?.session ?? null;
         console.log(
           "[초기화] 세션 조회 완료:",
           session?.user?.id ? "로그인됨" : "비로그인"
@@ -54,23 +66,22 @@ export default function Home() {
 
         if (session?.user) {
           console.log("[초기화] 구독 및 사용량 확인 시작");
-          // 순차적으로 실행 - 하나가 실패해도 다음 진행
           try {
             await checkSubscription(session.user.id);
           } catch (err) {
-            console.error("[초기화] 구독 확인 실패했지만 계속 진행");
+            console.error("[초기화] 구독 확인 실패했지만 계속 진행:", err);
           }
           try {
             await checkMonthlyUsage(session.user.id);
           } catch (err) {
-            console.error("[초기화] 사용량 확인 실패했지만 계속 진행");
+            console.error("[초기화] 사용량 확인 실패했지만 계속 진행:", err);
           }
           console.log("[초기화] 구독 및 사용량 확인 완료");
         }
       } catch (error) {
         console.error("[초기화] 오류 발생:", error);
       } finally {
-        console.log("[초기화] 로딩 완료");
+        console.log("[초기화] 로딩 플래그 false로 변경");
         setAuthLoading(false);
         setDataLoading(false);
       }
@@ -81,6 +92,7 @@ export default function Home() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("[authStateChange] 이벤트:", _event, session?.user?.id);
       setUser(session?.user ?? null);
 
       if (session?.user) {
@@ -100,7 +112,6 @@ export default function Home() {
   }, []);
 
   // 구독 상태 확인
-  // 구독 상태 확인
   const checkSubscription = async (userId: string) => {
     console.log("[구독] 구독 정보 조회 시작:", userId);
 
@@ -114,7 +125,7 @@ export default function Home() {
       console.log("[구독] 쿼리 완료");
 
       if (error) {
-        // PGRST116 = row 없음 (Supabase에서 "Single row expected, none found" 같은 상황)
+        // PGRST116 = row 없음 (Supabase에서 "Single row expected, none found")
         if ((error as any).code === "PGRST116") {
           console.log("[구독] 기존 구독 정보 없음 - 새 레코드 생성");
 
@@ -147,7 +158,7 @@ export default function Home() {
         return;
       }
 
-      const subscription = data;
+      const subscription = data as any;
       console.log("[구독] 구독 정보 있음:", subscription);
 
       if (subscription.subscription_end_date) {
@@ -216,8 +227,9 @@ export default function Home() {
         return;
       }
 
-      console.log("[사용량] 사용량 정보 있음:", data.message_count);
-      setMonthlyUsage(data.message_count);
+      const usage = data as any;
+      console.log("[사용량] 사용량 정보 있음:", usage.message_count);
+      setMonthlyUsage(usage.message_count);
       console.log("[사용량] 사용량 확인 완료");
     } catch (e: any) {
       console.error("[사용량] 사용량 확인 실패(try/catch):", e);
@@ -230,12 +242,18 @@ export default function Home() {
     try {
       const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 
-      const { data: usage } = await supabase
+      const { data, error } = await supabase
         .from("usage_tracking")
         .select("*")
         .eq("user_id", userId)
         .eq("month", today)
         .single();
+
+      if (error && (error as any).code !== "PGRST116") {
+        console.error("[사용량] 증가 전 조회 에러:", error);
+      }
+
+      const usage = data as any;
 
       if (usage) {
         const newCount = usage.message_count + 1;
@@ -269,14 +287,19 @@ export default function Home() {
 
   const loadChatMessages = async (chatId: string) => {
     try {
-      const { data: messagesData } = await supabase
+      const { data: messagesData, error } = await supabase
         .from("messages")
         .select("*")
         .eq("chat_room_id", chatId)
         .order("created_at", { ascending: true });
 
+      if (error) {
+        console.error("채팅 로드 실패:", error);
+        return;
+      }
+
       if (messagesData) {
-        const loadedMessages: Message[] = messagesData.map((msg) => ({
+        const loadedMessages: Message[] = messagesData.map((msg: any) => ({
           role: msg.role as "user" | "assistant",
           content: msg.content,
         }));
@@ -328,11 +351,18 @@ export default function Home() {
 
       // 첫 사용자 메시지인 경우 채팅방 제목 업데이트
       if (role === "user") {
-        const { data: messageCount } = await supabase
+        const { data, error } = await supabase
           .from("messages")
           .select("id", { count: "exact" })
           .eq("chat_room_id", chatId)
           .eq("role", "user");
+
+        if (error) {
+          console.error("메시지 카운트 조회 실패:", error);
+          return;
+        }
+
+        const messageCount = data as any[];
 
         if (messageCount && messageCount.length === 1) {
           const title =
@@ -473,21 +503,9 @@ export default function Home() {
       };
       setMessages([welcomeMessage]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, dataLoading]);
+  }, [authLoading, dataLoading, messages.length]);
 
-  // 인증 및 데이터 로딩 중일 때 로딩 화면 표시
-  if (authLoading || dataLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-red-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-rose-500 mx-auto mb-4"></div>
-          <p className="text-rose-900 font-semibold">로딩 중...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // ❗ 이제는 authLoading/dataLoading이 UI를 막지 않음
   return (
     <div className="flex h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-red-50">
       {/* Sidebar - 로그인한 사용자만 표시 */}
@@ -545,11 +563,9 @@ export default function Home() {
                 const messagesToSave = [...messages]; // 현재 메시지 복사
                 const newChatId = await createNewChat(session.user.id);
                 if (newChatId) {
-                  // 메시지 저장
                   for (const msg of messagesToSave) {
                     await saveMessage(newChatId, msg.role, msg.content);
                   }
-                  // 저장 완료 후 채팅방 ID 설정 (이렇게 하면 useEffect가 DB에서 다시 로드함)
                   setCurrentChatId(newChatId);
                   setRefreshSidebar((prev) => prev + 1);
                 }
