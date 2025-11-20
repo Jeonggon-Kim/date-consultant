@@ -42,25 +42,35 @@ export default function Home() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log('[초기화] 인증 상태 확인 시작');
+        console.log("[초기화] 인증 상태 확인 시작");
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        console.log('[초기화] 세션 조회 완료:', session?.user?.id ? '로그인됨' : '비로그인');
+        console.log(
+          "[초기화] 세션 조회 완료:",
+          session?.user?.id ? "로그인됨" : "비로그인"
+        );
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log('[초기화] 구독 및 사용량 확인 시작');
-          await Promise.all([
-            checkSubscription(session.user.id),
-            checkMonthlyUsage(session.user.id),
-          ]);
-          console.log('[초기화] 구독 및 사용량 확인 완료');
+          console.log("[초기화] 구독 및 사용량 확인 시작");
+          // 순차적으로 실행 - 하나가 실패해도 다음 진행
+          try {
+            await checkSubscription(session.user.id);
+          } catch (err) {
+            console.error("[초기화] 구독 확인 실패했지만 계속 진행");
+          }
+          try {
+            await checkMonthlyUsage(session.user.id);
+          } catch (err) {
+            console.error("[초기화] 사용량 확인 실패했지만 계속 진행");
+          }
+          console.log("[초기화] 구독 및 사용량 확인 완료");
         }
       } catch (error) {
-        console.error('[초기화] 오류 발생:', error);
+        console.error("[초기화] 오류 발생:", error);
       } finally {
-        console.log('[초기화] 로딩 완료');
+        console.log("[초기화] 로딩 완료");
         setAuthLoading(false);
         setDataLoading(false);
       }
@@ -92,31 +102,32 @@ export default function Home() {
   // 구독 상태 확인
   const checkSubscription = async (userId: string) => {
     try {
-      console.log('[구독] 구독 정보 조회 시작:', userId);
+      console.log("[구독] 구독 정보 조회 시작:", userId);
 
-      // 타임아웃 설정 (5초)
+      // 타임아웃 설정 (10초)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('타임아웃')), 5000)
+        setTimeout(() => reject(new Error("타임아웃")), 10000)
       );
 
+      console.log("userId:", userId);
       const queryPromise = supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      const { data: subscription, error } = await Promise.race([
+      const { data: subscription, error } = (await Promise.race([
         queryPromise,
-        timeoutPromise
-      ]) as any;
+        timeoutPromise,
+      ])) as any;
 
-      console.log('[구독] 쿼리 완료');
+      console.log("[구독] 쿼리 완료");
 
       if (error) {
-        console.log('[구독] 조회 오류:', error.message, error.code);
+        console.log("[구독] 조회 오류:", error.message, error.code);
         // PGRST116 에러는 데이터가 없다는 의미
-        if (error.code === 'PGRST116') {
-          console.log('[구독] 구독 정보 없음 - 새로 생성');
+        if (error.code === "PGRST116") {
+          console.log("[구독] 구독 정보 없음 - 새로 생성");
           await supabase.from("subscriptions").insert({
             user_id: userId,
             is_subscribed: false,
@@ -126,7 +137,7 @@ export default function Home() {
           throw error;
         }
       } else if (subscription) {
-        console.log('[구독] 구독 정보 있음:', subscription.is_subscribed);
+        console.log("[구독] 구독 정보 있음:", subscription.is_subscribed);
         if (subscription.subscription_end_date) {
           const endDate = new Date(subscription.subscription_end_date);
           const now = new Date();
@@ -136,7 +147,7 @@ export default function Home() {
         }
       }
 
-      console.log('[구독] 구독 확인 완료');
+      console.log("[구독] 구독 확인 완료");
     } catch (error: any) {
       console.error("[구독] 구독 정보 로드 실패:", error);
       console.error("[구독] 에러 상세:", error.message);
@@ -148,11 +159,11 @@ export default function Home() {
   const checkMonthlyUsage = async (userId: string) => {
     try {
       const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
-      console.log('[사용량] 사용량 조회 시작:', userId, today);
+      console.log("[사용량] 사용량 조회 시작:", userId, today);
 
-      // 타임아웃 설정 (5초)
+      // 타임아웃 설정 (10초)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('타임아웃')), 5000)
+        setTimeout(() => reject(new Error("타임아웃")), 10000)
       );
 
       const queryPromise = supabase
@@ -162,18 +173,18 @@ export default function Home() {
         .eq("month", today)
         .single();
 
-      const { data: usage, error } = await Promise.race([
+      const { data: usage, error } = (await Promise.race([
         queryPromise,
-        timeoutPromise
-      ]) as any;
+        timeoutPromise,
+      ])) as any;
 
-      console.log('[사용량] 쿼리 완료');
+      console.log("[사용량] 쿼리 완료");
 
       if (error) {
-        console.log('[사용량] 조회 오류:', error.message);
+        console.log("[사용량] 조회 오류:", error.message);
         // PGRST116 에러는 데이터가 없다는 의미
-        if (error.code === 'PGRST116') {
-          console.log('[사용량] 사용량 정보 없음 - 새로 생성');
+        if (error.code === "PGRST116") {
+          console.log("[사용량] 사용량 정보 없음 - 새로 생성");
           await supabase.from("usage_tracking").insert({
             user_id: userId,
             month: today,
@@ -184,11 +195,11 @@ export default function Home() {
           throw error;
         }
       } else if (usage) {
-        console.log('[사용량] 사용량 정보 있음:', usage.message_count);
+        console.log("[사용량] 사용량 정보 있음:", usage.message_count);
         setMonthlyUsage(usage.message_count);
       }
 
-      console.log('[사용량] 사용량 확인 완료');
+      console.log("[사용량] 사용량 확인 완료");
     } catch (error: any) {
       console.error("[사용량] 사용량 확인 실패:", error);
       console.error("[사용량] 에러 상세:", error.message, error.code);
@@ -320,11 +331,11 @@ export default function Home() {
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
-    console.log('[메시지] 메시지 전송 시작');
+    console.log("[메시지] 메시지 전송 시작");
 
     // 비로그인 유저의 메시지 제한 체크 (user+assistant 포함 10개)
     if (!user && messages.length >= 10) {
-      console.log('[메시지] 비로그인 사용자 제한 도달');
+      console.log("[메시지] 비로그인 사용자 제한 도달");
       alert("계속 상담하시려면 로그인해주세요.");
       setShowAuthModal(true);
       return;
@@ -332,7 +343,7 @@ export default function Home() {
 
     // 로그인 + 비구독 유저의 사용량 체크
     if (user && !isSubscribed && monthlyUsage >= FREE_MESSAGE_LIMIT) {
-      console.log('[메시지] 무료 사용량 초과');
+      console.log("[메시지] 무료 사용량 초과");
       setShowSubscriptionModal(true);
       return;
     }
@@ -343,7 +354,7 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      console.log('[메시지] API 호출 시작');
+      console.log("[메시지] API 호출 시작");
       // 로그인한 사용자면 채팅방 생성 또는 기존 채팅방 사용
       let chatId = currentChatId;
       if (user && !chatId) {
@@ -369,14 +380,14 @@ export default function Home() {
         }),
       });
 
-      console.log('[메시지] API 응답 수신:', response.status);
+      console.log("[메시지] API 응답 수신:", response.status);
 
       if (!response.ok) {
         throw new Error("API 요청 실패");
       }
 
       const data = await response.json();
-      console.log('[메시지] 응답 데이터 파싱 완료');
+      console.log("[메시지] 응답 데이터 파싱 완료");
 
       if (data.error) {
         throw new Error(data.error);
@@ -397,10 +408,10 @@ export default function Home() {
 
       // 로그인한 유저의 사용량 증가
       if (user) {
-        console.log('[메시지] 사용량 증가 시작');
+        console.log("[메시지] 사용량 증가 시작");
         await incrementUsage(user.id);
       }
-      console.log('[메시지] 메시지 전송 완료');
+      console.log("[메시지] 메시지 전송 완료");
     } catch (error: any) {
       console.error("[메시지] 오류 발생:", error);
       const errorMessage: Message = {
@@ -409,7 +420,7 @@ export default function Home() {
       };
       setMessages([...newMessages, errorMessage]);
     } finally {
-      console.log('[메시지] 로딩 종료');
+      console.log("[메시지] 로딩 종료");
       setIsLoading(false);
     }
   };
