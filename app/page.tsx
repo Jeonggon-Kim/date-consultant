@@ -100,110 +100,127 @@ export default function Home() {
   }, []);
 
   // 구독 상태 확인
+  // 구독 상태 확인
   const checkSubscription = async (userId: string) => {
+    console.log("[구독] 구독 정보 조회 시작:", userId);
+
     try {
-      console.log("[구독] 구독 정보 조회 시작:", userId);
-
-      // 타임아웃 설정 (10초)
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("타임아웃")), 1000)
-      );
-
-      console.log("userId:", userId);
-      const queryPromise = supabase
+      const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      const { data: subscription, error } = (await Promise.race([
-        queryPromise,
-        timeoutPromise,
-      ])) as any;
-
       console.log("[구독] 쿼리 완료");
 
       if (error) {
-        console.log("[구독] 조회 오류:", error.message, error.code);
-        // PGRST116 에러는 데이터가 없다는 의미
-        if (error.code === "PGRST116") {
-          console.log("[구독] 구독 정보 없음 - 새로 생성");
-          await supabase.from("subscriptions").insert({
-            user_id: userId,
-            is_subscribed: false,
-          });
+        // PGRST116 = row 없음 (Supabase에서 "Single row expected, none found" 같은 상황)
+        if ((error as any).code === "PGRST116") {
+          console.log("[구독] 기존 구독 정보 없음 - 새 레코드 생성");
+
+          const { error: insertError } = await supabase
+            .from("subscriptions")
+            .insert({
+              user_id: userId,
+              is_subscribed: false,
+            });
+
+          if (insertError) {
+            console.error("[구독] 새 레코드 생성 실패:", insertError);
+          }
+
           setIsSubscribed(false);
-        } else {
-          throw error;
+          console.log("[구독] 기본값(is_subscribed = false) 적용");
+          return;
         }
-      } else if (subscription) {
-        console.log("[구독] 구독 정보 있음:", subscription.is_subscribed);
-        if (subscription.subscription_end_date) {
-          const endDate = new Date(subscription.subscription_end_date);
-          const now = new Date();
-          setIsSubscribed(subscription.is_subscribed && endDate > now);
-        } else {
-          setIsSubscribed(subscription.is_subscribed);
-        }
+
+        // 그 외 에러는 그냥 로그 찍고 기본값
+        console.error("[구독] 조회 에러:", error);
+        setIsSubscribed(false);
+        return;
+      }
+
+      if (!data) {
+        // data도 없고 error도 없는 경우 방어코드
+        console.warn("[구독] 데이터/에러 둘 다 없음, 기본값 적용");
+        setIsSubscribed(false);
+        return;
+      }
+
+      const subscription = data;
+      console.log("[구독] 구독 정보 있음:", subscription);
+
+      if (subscription.subscription_end_date) {
+        const endDate = new Date(subscription.subscription_end_date);
+        const now = new Date();
+        const active = subscription.is_subscribed && endDate > now;
+        setIsSubscribed(active);
+        console.log("[구독] 최종 구독 상태(만료일 포함):", active);
+      } else {
+        setIsSubscribed(subscription.is_subscribed);
+        console.log("[구독] 최종 구독 상태:", subscription.is_subscribed);
       }
 
       console.log("[구독] 구독 확인 완료");
-    } catch (error: any) {
-      console.error("[구독] 구독 정보 로드 실패:", error);
-      console.error("[구독] 에러 상세:", error.message);
+    } catch (e: any) {
+      console.error("[구독] 구독 정보 로드 실패(try/catch):", e);
       setIsSubscribed(false);
     }
   };
 
-  // 사용량 확인 (현재는 날짜 단위)
+  // 사용량 확인
   const checkMonthlyUsage = async (userId: string) => {
+    const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    console.log("[사용량] 사용량 조회 시작:", userId, today);
+
     try {
-      const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
-      console.log("[사용량] 사용량 조회 시작:", userId, today);
-
-      // 타임아웃 설정 (10초)
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("타임아웃")), 10000)
-      );
-
-      const queryPromise = supabase
+      const { data, error } = await supabase
         .from("usage_tracking")
         .select("*")
         .eq("user_id", userId)
         .eq("month", today)
         .single();
 
-      const { data: usage, error } = (await Promise.race([
-        queryPromise,
-        timeoutPromise,
-      ])) as any;
-
       console.log("[사용량] 쿼리 완료");
 
       if (error) {
-        console.log("[사용량] 조회 오류:", error.message);
-        // PGRST116 에러는 데이터가 없다는 의미
-        if (error.code === "PGRST116") {
-          console.log("[사용량] 사용량 정보 없음 - 새로 생성");
-          await supabase.from("usage_tracking").insert({
-            user_id: userId,
-            month: today,
-            message_count: 0,
-          });
+        // row 없음 → 새 레코드 생성
+        if ((error as any).code === "PGRST116") {
+          console.log("[사용량] 기존 사용량 레코드 없음 - 새로 생성");
+
+          const { error: insertError } = await supabase
+            .from("usage_tracking")
+            .insert({
+              user_id: userId,
+              month: today,
+              message_count: 0,
+            });
+
+          if (insertError) {
+            console.error("[사용량] 새 레코드 생성 실패:", insertError);
+          }
+
           setMonthlyUsage(0);
-        } else {
-          throw error;
+          console.log("[사용량] 기본값(0) 적용");
+          return;
         }
-      } else if (usage) {
-        console.log("[사용량] 사용량 정보 있음:", usage.message_count);
-        setMonthlyUsage(usage.message_count);
+
+        console.error("[사용량] 조회 에러:", error);
+        setMonthlyUsage(0);
+        return;
       }
 
+      if (!data) {
+        console.warn("[사용량] 데이터/에러 둘 다 없음, 기본값 적용");
+        setMonthlyUsage(0);
+        return;
+      }
+
+      console.log("[사용량] 사용량 정보 있음:", data.message_count);
+      setMonthlyUsage(data.message_count);
       console.log("[사용량] 사용량 확인 완료");
-    } catch (error: any) {
-      console.error("[사용량] 사용량 확인 실패:", error);
-      console.error("[사용량] 에러 상세:", error.message, error.code);
-      // 에러가 발생해도 0으로 설정하고 계속 진행
+    } catch (e: any) {
+      console.error("[사용량] 사용량 확인 실패(try/catch):", e);
       setMonthlyUsage(0);
     }
   };
