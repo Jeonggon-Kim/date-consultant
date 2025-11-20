@@ -93,17 +93,39 @@ export default function Home() {
   const checkSubscription = async (userId: string) => {
     try {
       console.log('[구독] 구독 정보 조회 시작:', userId);
-      const { data: subscription, error } = await supabase
+
+      // 타임아웃 설정 (5초)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('타임아웃')), 5000)
+      );
+
+      const queryPromise = supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      if (error) {
-        console.log('[구독] 조회 오류:', error.message);
-      }
+      const { data: subscription, error } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any;
 
-      if (subscription) {
+      console.log('[구독] 쿼리 완료');
+
+      if (error) {
+        console.log('[구독] 조회 오류:', error.message, error.code);
+        // PGRST116 에러는 데이터가 없다는 의미
+        if (error.code === 'PGRST116') {
+          console.log('[구독] 구독 정보 없음 - 새로 생성');
+          await supabase.from("subscriptions").insert({
+            user_id: userId,
+            is_subscribed: false,
+          });
+          setIsSubscribed(false);
+        } else {
+          throw error;
+        }
+      } else if (subscription) {
         console.log('[구독] 구독 정보 있음:', subscription.is_subscribed);
         if (subscription.subscription_end_date) {
           const endDate = new Date(subscription.subscription_end_date);
@@ -112,18 +134,12 @@ export default function Home() {
         } else {
           setIsSubscribed(subscription.is_subscribed);
         }
-      } else {
-        console.log('[구독] 구독 정보 없음 - 새로 생성');
-        // 구독 정보가 없으면 생성
-        await supabase.from("subscriptions").insert({
-          user_id: userId,
-          is_subscribed: false,
-        });
-        setIsSubscribed(false);
       }
+
       console.log('[구독] 구독 확인 완료');
-    } catch (error) {
+    } catch (error: any) {
       console.error("[구독] 구독 정보 로드 실패:", error);
+      console.error("[구독] 에러 상세:", error.message);
       setIsSubscribed(false);
     }
   };
@@ -134,33 +150,49 @@ export default function Home() {
       const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
       console.log('[사용량] 사용량 조회 시작:', userId, today);
 
-      const { data: usage, error } = await supabase
+      // 타임아웃 설정 (5초)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('타임아웃')), 5000)
+      );
+
+      const queryPromise = supabase
         .from("usage_tracking")
         .select("*")
         .eq("user_id", userId)
         .eq("month", today)
         .single();
 
+      const { data: usage, error } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any;
+
+      console.log('[사용량] 쿼리 완료');
+
       if (error) {
         console.log('[사용량] 조회 오류:', error.message);
-      }
-
-      if (usage) {
+        // PGRST116 에러는 데이터가 없다는 의미
+        if (error.code === 'PGRST116') {
+          console.log('[사용량] 사용량 정보 없음 - 새로 생성');
+          await supabase.from("usage_tracking").insert({
+            user_id: userId,
+            month: today,
+            message_count: 0,
+          });
+          setMonthlyUsage(0);
+        } else {
+          throw error;
+        }
+      } else if (usage) {
         console.log('[사용량] 사용량 정보 있음:', usage.message_count);
         setMonthlyUsage(usage.message_count);
-      } else {
-        console.log('[사용량] 사용량 정보 없음 - 새로 생성');
-        // 오늘 사용량 기록이 없으면 생성
-        await supabase.from("usage_tracking").insert({
-          user_id: userId,
-          month: today,
-          message_count: 0,
-        });
-        setMonthlyUsage(0);
       }
+
       console.log('[사용량] 사용량 확인 완료');
-    } catch (error) {
+    } catch (error: any) {
       console.error("[사용량] 사용량 확인 실패:", error);
+      console.error("[사용량] 에러 상세:", error.message, error.code);
+      // 에러가 발생해도 0으로 설정하고 계속 진행
       setMonthlyUsage(0);
     }
   };
