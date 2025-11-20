@@ -79,85 +79,85 @@ export default function SubscriptionModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-rose-900 mb-2">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start md:items-center justify-center z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-8 max-w-md w-full m-4 max-h-[95vh] overflow-y-auto">
+        <div className="text-center mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-rose-900 mb-2">
             💝 오늘의 무료 사용량 소진
           </h2>
-          <p className="text-gray-600">
+          <p className="text-sm md:text-base text-gray-600">
             내일 다시 시도하거나 구독하세요
           </p>
         </div>
 
-        <div className="bg-rose-50 rounded-lg p-6 mb-6">
-          <div className="text-center mb-4">
-            <p className="text-gray-600 text-sm mb-2">오늘 사용량</p>
-            <p className="text-3xl font-bold text-rose-600">
+        <div className="bg-rose-50 rounded-lg p-4 mb-4">
+          <div className="text-center mb-3">
+            <p className="text-gray-600 text-xs mb-1">오늘 사용량</p>
+            <p className="text-2xl md:text-3xl font-bold text-rose-600">
               {currentUsage} / {maxUsage}
             </p>
-            <p className="text-gray-500 text-sm mt-1">메시지</p>
+            <p className="text-gray-500 text-xs mt-1">메시지</p>
           </div>
 
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
             <div
-              className="bg-gradient-to-r from-rose-500 to-pink-500 h-3 rounded-full transition-all"
+              className="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full transition-all"
               style={{ width: `${Math.min((currentUsage / maxUsage) * 100, 100)}%` }}
             ></div>
           </div>
 
-          <p className="text-center text-rose-600 font-semibold">
+          <p className="text-center text-rose-600 font-semibold text-sm">
             오늘의 무료 사용량 {maxUsage}개를 모두 사용했습니다
           </p>
-          <p className="text-center text-gray-500 text-sm mt-2">
+          <p className="text-center text-gray-500 text-xs mt-1">
             내일 자정이 되면 다시 무료로 사용하실 수 있습니다
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg p-6 mb-6 border-2 border-rose-200">
-          <div className="text-center mb-4">
-            <p className="text-4xl font-bold text-rose-600">월 1,000원</p>
-            <p className="text-gray-600 text-sm mt-2">VAT 포함</p>
+        <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg p-4 mb-4 border-2 border-rose-200">
+          <div className="text-center mb-3">
+            <p className="text-3xl md:text-4xl font-bold text-rose-600">월 1,000원</p>
+            <p className="text-gray-600 text-xs md:text-sm mt-1">VAT 포함</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center">
-              <span className="text-rose-500 mr-2">✓</span>
-              <span className="text-gray-700">무제한 AI 상담</span>
+              <span className="text-rose-500 mr-2 text-sm">✓</span>
+              <span className="text-gray-700 text-sm">무제한 AI 상담</span>
             </div>
             <div className="flex items-center">
-              <span className="text-rose-500 mr-2">✓</span>
-              <span className="text-gray-700">채팅 히스토리 영구 저장</span>
+              <span className="text-rose-500 mr-2 text-sm">✓</span>
+              <span className="text-gray-700 text-sm">채팅 히스토리 영구 저장</span>
             </div>
             <div className="flex items-center">
-              <span className="text-rose-500 mr-2">✓</span>
-              <span className="text-gray-700">전문가 재회 전략 제공</span>
+              <span className="text-rose-500 mr-2 text-sm">✓</span>
+              <span className="text-gray-700 text-sm">전문가 재회 전략 제공</span>
             </div>
             <div className="flex items-center">
-              <span className="text-rose-500 mr-2">✓</span>
-              <span className="text-gray-700">언제든 해지 가능</span>
+              <span className="text-rose-500 mr-2 text-sm">✓</span>
+              <span className="text-gray-700 text-sm">언제든 해지 가능</span>
             </div>
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           <button
             onClick={handleSubscribe}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-4 rounded-lg font-bold text-lg hover:from-rose-600 hover:to-pink-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all shadow-lg"
+            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:from-rose-600 hover:to-pink-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all shadow-lg"
           >
             {loading ? '처리 중...' : '구독하기'}
           </button>
 
           <button
             onClick={onClose}
-            className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-all"
+            className="w-full bg-gray-100 text-gray-700 py-2.5 md:py-3 rounded-lg font-semibold hover:bg-gray-200 transition-all text-sm md:text-base"
           >
             나중에
           </button>
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-4">
+        <p className="text-xs text-gray-500 text-center mt-3">
           구독하면 매일 무제한으로 이용 가능합니다
         </p>
       </div>
