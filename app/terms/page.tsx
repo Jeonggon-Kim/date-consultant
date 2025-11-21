@@ -42,7 +42,7 @@ export default function TermsPage() {
             <section>
               <h3 className="text-lg font-bold text-gray-800 mb-3">제1조 (목적)</h3>
               <p>
-                본 약관은 솔(SOL)(이하 "회사")이 제공하는 재회 솔루션 AI 상담
+                본 약관은 솔(SOL)(이하 "회사")이 제공하는 연애 솔루션 AI 상담
                 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리,
                 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
               </p>
@@ -54,7 +54,7 @@ export default function TermsPage() {
               </h3>
               <ul className="list-disc list-inside space-y-2">
                 <li>
-                  "서비스"란 회사가 제공하는 AI 기반 재회 상담 서비스를
+                  "서비스"란 회사가 제공하는 AI 기반 연애 상담 서비스(재회 특화)를
                   의미합니다.
                 </li>
                 <li>
@@ -95,7 +95,7 @@ export default function TermsPage() {
               <ul className="list-disc list-inside space-y-2">
                 <li>회사는 다음과 같은 서비스를 제공합니다:
                   <ul className="list-circle list-inside ml-6 mt-2">
-                    <li>AI 기반 재회 상담 서비스</li>
+                    <li>AI 기반 연애 상담 서비스 (재회 특화)</li>
                     <li>채팅 이력 저장 및 관리</li>
                     <li>구독 기반 프리미엄 서비스</li>
                   </ul>

@@ -15,7 +15,7 @@ interface Message {
   content: string;
 }
 
-const FREE_MESSAGE_LIMIT = 10; // 무료 사용자 메시지 제한 (현재는 날짜 기준)
+const FREE_MESSAGE_LIMIT = 30; // 무료 사용자 메시지 제한 (현재는 날짜 기준)
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -25,6 +25,7 @@ export default function Home() {
   const [dataLoading, setDataLoading] = useState(false);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalSignUpOnly, setAuthModalSignUpOnly] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,6 +33,7 @@ export default function Home() {
   const [refreshSidebar, setRefreshSidebar] = useState(0); // 사이드바 새로고침 트리거
   const [isSubscribed, setIsSubscribed] = useState(false); // 구독 여부
   const [monthlyUsage, setMonthlyUsage] = useState(0); // 이번 달(지금은 날짜) 사용량
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 모바일 사이드바 상태
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -90,18 +92,15 @@ export default function Home() {
 
     initAuth();
 
+    // 🔥 auth 상태 변경 시에는 user 상태만 갱신하고,
+    // 구독/사용량은 별도의 effect(user.id)에서 처리
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log("[authStateChange] 이벤트:", _event, session?.user?.id);
       setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await Promise.all([
-          checkSubscription(session.user.id),
-          checkMonthlyUsage(session.user.id),
-        ]);
-      } else {
+      if (!session?.user) {
         // 로그아웃 시 상태 초기화
         setIsSubscribed(false);
         setMonthlyUsage(0);
@@ -111,6 +110,27 @@ export default function Home() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // ✅ user.id가 바뀔 때마다(로그인/세션갱신 등) 구독/사용량 조회
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log("[user effect] 구독/사용량 로드:", user.id);
+
+    (async () => {
+      try {
+        await checkSubscription(user.id);
+      } catch (err) {
+        console.error("[user effect] 구독 확인 실패:", err);
+      }
+
+      try {
+        await checkMonthlyUsage(user.id);
+      } catch (err) {
+        console.error("[user effect] 사용량 확인 실패:", err);
+      }
+    })();
+  }, [user?.id]);
 
   // 구독 상태 확인
   const checkSubscription = async (userId: string) => {
@@ -233,7 +253,7 @@ export default function Home() {
       setMonthlyUsage(usage.message_count);
       console.log("[사용량] 사용량 확인 완료");
     } catch (e: any) {
-      console.error("[사용량] 사용량 확인 실패(try/catch):", e);
+      console.error("[사용량] 사용량 확인 실패(try/c치):", e);
       setMonthlyUsage(0);
     }
   };
@@ -324,7 +344,7 @@ export default function Home() {
         .from("chat_rooms")
         .insert({
           user_id: targetUserId,
-          title: "새로운 재회 상담",
+          title: "새로운 연애 상담",
         })
         .select()
         .single();
@@ -500,7 +520,7 @@ export default function Home() {
     const welcomeMessage: Message = {
       role: "assistant",
       content:
-        "새로운 상담을 시작해볼게요. 🙂\n\n지금 어떤 상황인지 편하게 말씀해 주세요.",
+        "새로운 상담을 시작해볼게요. 🙂\n\n연애 고민이 있으시다면 편하게 말씀해 주세요. 재회, 연애 시작, 관계 유지 등 모든 고민을 함께 나눠요.",
     };
     setMessages([welcomeMessage]);
   };
@@ -522,7 +542,7 @@ export default function Home() {
       const welcomeMessage: Message = {
         role: "assistant",
         content:
-          "안녕하세요! 재회 전문 상담사입니다. 💕\n\n지금 어떤 상황인지 편하게 써주시면, 차분하게 같이 정리해 드릴게요.",
+          "안녕하세요! 연애 전문 상담사입니다. 💕\n\n연애 고민, 재회, 관계 회복 등 어떤 이야기든 편하게 나눠주세요. 함께 해결책을 찾아드릴게요!",
       };
       setMessages([welcomeMessage]);
     }
@@ -540,42 +560,118 @@ export default function Home() {
 
   // ❗ 이제는 authLoading/dataLoading이 UI를 막지 않음
   return (
-    <div className="flex h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-red-50">
+    <div className="flex h-screen bg-gradient-premium relative overflow-hidden">
+      {/* 배경 장식 요소 - 초반에만 나타났다 사라짐 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-40 w-80 h-80 bg-purple-200/40 rounded-full mix-blend-normal filter blur-3xl opacity-0 animate-fadeIn" style={{animation: 'fadeIn 2s ease-out forwards, fadeOut 2s ease-out 15s forwards'}}></div>
+        <div className="absolute top-0 -right-40 w-80 h-80 bg-pink-200/30 rounded-full mix-blend-normal filter blur-3xl opacity-0 delay-100" style={{animation: 'fadeIn 2s ease-out 0.5s forwards, fadeOut 2s ease-out 17.5s forwards'}}></div>
+      </div>
+      <style jsx>{`
+        @keyframes fadeOut {
+          from { opacity: 0.15; }
+          to { opacity: 0; }
+        }
+      `}</style>
       {/* Sidebar - 로그인한 사용자만 표시 */}
       {user && (
-        <ChatHistorySidebar
-          userId={user.id}
-          currentChatId={currentChatId}
-          onChatSelect={handleChatSelect}
-          onNewChat={handleNewChat}
-          refreshTrigger={refreshSidebar}
-        />
+        <>
+          {/* 모바일 오버레이 배경 */}
+          {isSidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
+          {/* 사이드바 - 데스크톱에서는 항상 표시, 모바일에서는 조건부 표시 */}
+          <div
+            className={`
+              fixed md:static inset-y-0 left-0 z-50
+              transform transition-transform duration-300 ease-in-out
+              ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+              md:translate-x-0
+            `}
+          >
+            <ChatHistorySidebar
+              userId={user.id}
+              currentChatId={currentChatId}
+              onChatSelect={(chatId) => {
+                handleChatSelect(chatId);
+                // 모바일에서 채팅 선택 시 사이드바 닫기
+                setIsSidebarOpen(false);
+              }}
+              onNewChat={() => {
+                handleNewChat();
+                // 모바일에서 새 채팅 시작 시 사이드바 닫기
+                setIsSidebarOpen(false);
+              }}
+              refreshTrigger={refreshSidebar}
+            />
+          </div>
+        </>
       )}
 
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 relative z-10">
         {/* Header */}
-        <header className="bg-gradient-to-r from-rose-500 to-pink-500 shadow-lg p-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-white">💕 재회 솔루션</h1>
-            <p className="text-pink-100 text-sm mt-1">
-              전문 상담사가 함께합니다
-            </p>
+        <header className="glass-effect border-b border-white/20 shadow-premium-lg p-5 flex justify-between items-center relative z-50">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 -z-10"></div>
+          <div className="flex items-center gap-4 relative z-10">
+            {/* 햄버거 메뉴 버튼 - 로그인한 사용자의 모바일에서만 표시 */}
+            {user && (
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="md:hidden text-purple-600 hover:bg-purple-100 p-2.5 rounded-xl transition-all duration-300 hover:scale-105 shadow-premium-sm"
+                aria-label="메뉴 열기"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+            )}
+            <div className="animate-fadeIn flex items-center gap-3">
+              <div className="text-5xl animate-pulse-soft">💕</div>
+              <div>
+                <h1 className="text-3xl font-extrabold text-gradient tracking-tight">
+                  연애 솔루션
+                </h1>
+                <p className="text-purple-600/80 text-sm mt-0.5 font-medium tracking-wide">
+                  AI 기반 전문 상담 서비스
+                </p>
+              </div>
+            </div>
           </div>
           {user ? (
             <UserMenu onLogout={handleLogout} />
           ) : (
-            <div className="flex gap-2">
+            <div className="flex gap-3 relative z-10">
               <button
-                onClick={() => setShowAuthModal(true)}
-                className="bg-white text-rose-500 px-4 py-2 rounded-lg font-semibold hover:bg-rose-50 transition-all text-sm border-2 border-white"
+                onClick={() => {
+                  setAuthModalSignUpOnly(false);
+                  setShowAuthModal(true);
+                }}
+                className="glass-effect px-6 py-2.5 rounded-xl font-semibold text-purple-600 hover-lift shadow-premium-sm border border-purple-200/50 hover:border-purple-300/80 transition-all duration-300"
               >
                 로그인
               </button>
               <button
-                onClick={() => window.location.href = "/pricing"}
-                className="bg-white text-rose-500 px-4 py-2 rounded-lg font-semibold hover:bg-rose-50 transition-all text-sm border-2 border-white"
+                onClick={() => {
+                  setAuthModalSignUpOnly(true);
+                  setShowAuthModal(true);
+                }}
+                className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-premium-lg shadow-premium-md transition-all duration-300 relative overflow-hidden group"
               >
-                구독하기
+                <span className="relative z-10">구독하기</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
             </div>
           )}
@@ -585,7 +681,7 @@ export default function Home() {
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          signUpOnly={false}
+          signUpOnly={authModalSignUpOnly}
           onSuccess={async () => {
             // 로그인/회원가입 성공 후 현재 대화를 DB에 저장
             const {
@@ -607,7 +703,7 @@ export default function Home() {
                 }
               }
 
-              // 구독/사용량 갱신
+              // 구독/사용량 갱신 (user.id effect에서도 한 번 더 돌긴 하지만 상관 없음)
               await Promise.all([
                 checkSubscription(session.user.id),
                 checkMonthlyUsage(session.user.id),
@@ -617,10 +713,26 @@ export default function Home() {
         />
 
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-6 scroll-smooth relative">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500 text-lg">재회 상담을 시작해보세요!</p>
+              <div className="text-center animate-fadeIn max-w-md">
+                <div className="relative inline-block mb-6">
+                  <div className="text-7xl animate-float">💕</div>
+                  <div className="absolute inset-0 blur-2xl bg-pink-400/20 animate-pulse-soft"></div>
+                </div>
+                <h2 className="text-2xl font-bold text-gradient mb-3">
+                  연애 상담을 시작해보세요
+                </h2>
+                <p className="text-gray-500 text-base leading-relaxed">
+                  AI 전문 상담사가 여러분의 연애 고민을<br />
+                  함께 해결해드립니다
+                </p>
+                <div className="mt-8 flex items-center justify-center gap-2 text-sm text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                  <span>편안하게 대화를 시작해주세요</span>
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -632,12 +744,15 @@ export default function Home() {
                 />
               ))}
               {isLoading && (
-                <div className="flex justify-start mb-4">
-                  <div className="bg-pink-100 rounded-lg px-4 py-2">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce delay-100"></div>
-                      <div className="w-2 h-2 bg-rose-500 rounded-full animate-bounce delay-200"></div>
+                <div className="flex justify-start mb-6 animate-fadeIn">
+                  <div className="glass-effect rounded-3xl px-8 py-4 shadow-premium-md border border-purple-200/30">
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1.5">
+                        <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full animate-bounce shadow-premium-sm"></div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full animate-bounce delay-100 shadow-premium-sm"></div>
+                        <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full animate-bounce delay-200 shadow-premium-sm"></div>
+                      </div>
+                      <span className="text-sm text-purple-600/70 font-medium">AI가 답변 중...</span>
                     </div>
                   </div>
                 </div>
@@ -652,23 +767,23 @@ export default function Home() {
 
         {/* Footer - 비로그인 유저용 */}
         {!user && (
-          <div className="bg-gray-50 border-t border-gray-200 py-3 px-4">
-            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-xs text-gray-600">
-              <span>
-                솔(SOL) | 사업자: 337-03-03814 | 대표: 김정곤 | 전화:
-                010-8348-0132
+          <div className="glass-effect border-t border-white/20 py-4 px-6 shadow-inner-soft relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-blue-500/5"></div>
+            <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-xs text-gray-600 relative z-10">
+              <span className="font-medium">
+                솔(SOL) | 사업자: 337-03-03814 | 대표: 김정곤 | 전화: 010-8348-0132
               </span>
-              <div className="flex gap-3">
-                <a href="/pricing" className="hover:text-rose-600">
+              <div className="flex gap-4">
+                <a href="/pricing" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
                   상품안내
                 </a>
-                <a href="/terms" className="hover:text-rose-600">
+                <a href="/terms" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
                   이용약관
                 </a>
-                <a href="/privacy" className="hover:text-rose-600">
+                <a href="/privacy" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
                   개인정보처리방침
                 </a>
-                <a href="/refund" className="hover:text-rose-600">
+                <a href="/refund" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
                   환불정책
                 </a>
               </div>

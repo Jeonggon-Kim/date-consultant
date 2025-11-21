@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import SubscriptionModal from "@/app/components/SubscriptionModal";
 
 interface SubscriptionInfo {
   is_subscribed: boolean;
@@ -16,6 +17,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -227,7 +229,7 @@ export default function ProfilePage() {
                     구독하시면 더 많은 상담을 받으실 수 있습니다.
                   </p>
                   <button
-                    onClick={() => router.push("/")}
+                    onClick={() => setShowSubscriptionModal(true)}
                     className="bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-lg font-semibold hover:from-rose-600 hover:to-pink-600 transition-all"
                   >
                     구독하러 가기
@@ -240,6 +242,15 @@ export default function ProfilePage() {
           )}
         </div>
       </main>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        currentUsage={0}
+        maxUsage={10}
+        userId={user?.id}
+      />
     </div>
   );
 }

@@ -164,22 +164,31 @@ export default function SubscriptionModal({
             </div>
             <div className="flex items-center">
               <span className="text-rose-500 mr-2 text-sm">✓</span>
-              <span className="text-gray-700 text-sm">전문가 재회 전략 제공</span>
+              <span className="text-gray-700 text-sm">연애·재회 전략 제공</span>
             </div>
             <div className="flex items-center">
               <span className="text-rose-500 mr-2 text-sm">✓</span>
               <span className="text-gray-700 text-sm">언제든 해지 가능</span>
             </div>
           </div>
+
+          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-center text-yellow-800 text-xs md:text-sm font-semibold">
+              ⚠️ 현재 구독 서비스는 준비 중입니다
+            </p>
+            <p className="text-center text-yellow-700 text-xs mt-1">
+              PG사 승인 대기 중이며, 곧 이용 가능합니다
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2">
           <button
             onClick={handleSubscribe}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:from-rose-600 hover:to-pink-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all shadow-lg"
+            disabled={true}
+            className="w-full bg-gradient-to-r from-gray-300 to-gray-300 text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg cursor-not-allowed transition-all shadow-lg"
           >
-            {loading ? '처리 중...' : '구독하기'}
+            구독 서비스 준비 중
           </button>
 
           <button

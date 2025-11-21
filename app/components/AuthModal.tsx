@@ -14,6 +14,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
   const [isSignUp, setIsSignUp] = useState(signUpOnly);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +32,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
 
     try {
       if (isSignUp) {
+        // 비밀번호 확인 검증
+        if (password !== passwordConfirm) {
+          setError('비밀번호가 일치하지 않습니다.');
+          setLoading(false);
+          return;
+        }
         // 이메일 확인 없이 즉시 가입 및 로그인
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -119,6 +126,23 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
             />
           </div>
 
+          {isSignUp && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                비밀번호 확인
+              </label>
+              <input
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-rose-500"
+                placeholder="비밀번호를 다시 입력하세요"
+                required
+                minLength={6}
+              />
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
@@ -136,7 +160,11 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
 
         <div className="mt-4 text-center">
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError(null);
+              setPasswordConfirm('');
+            }}
             className="text-rose-500 hover:text-rose-600 text-sm"
           >
             {isSignUp ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입'}

@@ -124,7 +124,7 @@ export default function PricingPage() {
                     />
                   </svg>
                   <span className="text-gray-700">
-                    전문 재회 상담사의 맞춤형 솔루션
+                    전문 연애 상담사의 맞춤형 솔루션 (재회 특화)
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
@@ -195,7 +195,7 @@ export default function PricingPage() {
                     />
                   </svg>
                   <span className="text-gray-700">
-                    일일 10회 메시지 제한
+                    일일 30회 메시지 제한
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
