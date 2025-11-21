@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import ChatMessage from "./components/ChatMessage";
 import ChatInput from "./components/ChatInput";
 import AuthModal from "./components/AuthModal";
 import ChatHistorySidebar from "./components/ChatHistorySidebar";
 import SubscriptionModal from "./components/SubscriptionModal";
+import UserMenu from "./components/UserMenu";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 
@@ -278,14 +279,7 @@ export default function Home() {
     }
   };
 
-  // 채팅방 변경 시 해당 채팅방 메시지 로드
-  useEffect(() => {
-    if (currentChatId && user) {
-      loadChatMessages(currentChatId);
-    }
-  }, [currentChatId, user]);
-
-  const loadChatMessages = async (chatId: string) => {
+  const loadChatMessages = useCallback(async (chatId: string) => {
     try {
       const { data: messagesData, error } = await supabase
         .from("messages")
@@ -312,7 +306,14 @@ export default function Home() {
     } catch (error) {
       console.error("채팅 로드 실패:", error);
     }
-  };
+  }, []);
+
+  // 채팅방 변경 시 해당 채팅방 메시지 로드
+  useEffect(() => {
+    if (currentChatId && user) {
+      loadChatMessages(currentChatId);
+    }
+  }, [currentChatId, user, loadChatMessages]);
 
   const createNewChat = async (userId?: string) => {
     const targetUserId = userId || user?.id;
@@ -426,7 +427,7 @@ export default function Home() {
       console.log("[메시지] OpenAI API 호출 중...");
       // 30초 타임아웃 설정
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('API 요청 시간 초과 (30초)')), 30000)
+        setTimeout(() => reject(new Error("API 요청 시간 초과 (30초)")), 30000)
       );
 
       const fetchPromise = fetch("/api/chat", {
@@ -439,7 +440,10 @@ export default function Home() {
         }),
       });
 
-      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+      const response = (await Promise.race([
+        fetchPromise,
+        timeoutPromise,
+      ])) as Response;
 
       console.log("[메시지] API 응답 수신:", response.status);
 
@@ -524,6 +528,16 @@ export default function Home() {
     }
   }, [authLoading, dataLoading, messages.length]);
 
+  // URL 파라미터로 subscribe=true가 있으면 구독 모달 열기
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("subscribe") === "true" && user) {
+      setShowSubscriptionModal(true);
+      // URL에서 파라미터 제거
+      window.history.replaceState({}, "", "/");
+    }
+  }, [user]);
+
   // ❗ 이제는 authLoading/dataLoading이 UI를 막지 않음
   return (
     <div className="flex h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-red-50">
@@ -548,19 +562,22 @@ export default function Home() {
             </p>
           </div>
           {user ? (
-            <button
-              onClick={handleLogout}
-              className="bg-white text-rose-500 px-4 py-2 rounded-lg font-semibold hover:bg-rose-50 transition-all text-sm"
-            >
-              로그아웃
-            </button>
+            <UserMenu onLogout={handleLogout} />
           ) : (
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="bg-white text-rose-500 px-4 py-2 rounded-lg font-semibold hover:bg-rose-50 transition-all text-sm border-2 border-white"
-            >
-              로그인
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="bg-white text-rose-500 px-4 py-2 rounded-lg font-semibold hover:bg-rose-50 transition-all text-sm border-2 border-white"
+              >
+                로그인
+              </button>
+              <button
+                onClick={() => window.location.href = "/pricing"}
+                className="bg-white text-rose-500 px-4 py-2 rounded-lg font-semibold hover:bg-rose-50 transition-all text-sm border-2 border-white"
+              >
+                구독하기
+              </button>
+            </div>
           )}
         </header>
 
@@ -632,6 +649,32 @@ export default function Home() {
 
         {/* Input */}
         <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+
+        {/* Footer - 비로그인 유저용 */}
+        {!user && (
+          <div className="bg-gray-50 border-t border-gray-200 py-3 px-4">
+            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 text-xs text-gray-600">
+              <span>
+                솔(SOL) | 사업자: 337-03-03814 | 대표: 김정곤 | 전화:
+                010-8348-0132
+              </span>
+              <div className="flex gap-3">
+                <a href="/pricing" className="hover:text-rose-600">
+                  상품안내
+                </a>
+                <a href="/terms" className="hover:text-rose-600">
+                  이용약관
+                </a>
+                <a href="/privacy" className="hover:text-rose-600">
+                  개인정보처리방침
+                </a>
+                <a href="/refund" className="hover:text-rose-600">
+                  환불정책
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Subscription Modal */}
