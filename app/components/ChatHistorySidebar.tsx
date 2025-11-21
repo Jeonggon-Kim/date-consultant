@@ -56,20 +56,44 @@ export default function ChatHistorySidebar({
   }, [menuOpenId]);
 
   const loadChatRooms = async () => {
+    if (!userId) {
+      console.log('userId 없음, 로딩 종료');
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log('채팅방 목록 로드 중... userId:', userId);
-      const { data, error } = await supabase
+
+      // 타임아웃 설정 (5초)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('채팅방 목록 로드 타임아웃')), 5000)
+      );
+
+      const queryPromise = supabase
         .from('chat_rooms')
         .select('id, title, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      const { data, error } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any;
+
+      if (error) {
+        console.error('쿼리 에러:', error);
+        throw error;
+      }
+
       console.log('로드된 채팅방 개수:', data?.length);
       setChatRooms(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('채팅방 목록 로드 실패:', error);
+      // 타임아웃이나 에러가 발생해도 빈 배열로 설정
+      setChatRooms([]);
     } finally {
+      console.log('채팅방 로딩 상태 false로 변경');
       setLoading(false);
     }
   };

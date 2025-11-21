@@ -405,19 +405,31 @@ export default function Home() {
       // 로그인한 사용자면 채팅방 생성 또는 기존 채팅방 사용
       let chatId = currentChatId;
       if (user && !chatId) {
+        console.log("[메시지] 새 채팅방 생성 시작");
         chatId = await createNewChat();
         if (chatId) {
+          console.log("[메시지] 새 채팅방 생성됨:", chatId);
           setCurrentChatId(chatId);
           setRefreshSidebar((prev) => prev + 1);
+        } else {
+          console.error("[메시지] 채팅방 생성 실패");
         }
       }
 
       // 사용자 메시지 저장
       if (user && chatId) {
+        console.log("[메시지] 사용자 메시지 저장 중...");
         await saveMessage(chatId, "user", content);
+        console.log("[메시지] 사용자 메시지 저장 완료");
       }
 
-      const response = await fetch("/api/chat", {
+      console.log("[메시지] OpenAI API 호출 중...");
+      // 30초 타임아웃 설정
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('API 요청 시간 초과 (30초)')), 30000)
+      );
+
+      const fetchPromise = fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -427,10 +439,14 @@ export default function Home() {
         }),
       });
 
+      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
+
       console.log("[메시지] API 응답 수신:", response.status);
 
       if (!response.ok) {
-        throw new Error("API 요청 실패");
+        const errorText = await response.text();
+        console.error("[메시지] API 오류 응답:", errorText);
+        throw new Error(`API 요청 실패: ${response.status}`);
       }
 
       const data = await response.json();
@@ -450,13 +466,16 @@ export default function Home() {
 
       // AI 응답 저장
       if (user && chatId) {
+        console.log("[메시지] AI 응답 저장 중...");
         await saveMessage(chatId, "assistant", data.message.content);
+        console.log("[메시지] AI 응답 저장 완료");
       }
 
       // 로그인한 유저의 사용량 증가
       if (user) {
         console.log("[메시지] 사용량 증가 시작");
         await incrementUsage(user.id);
+        console.log("[메시지] 사용량 증가 완료");
       }
       console.log("[메시지] 메시지 전송 완료");
     } catch (error: any) {

@@ -13,7 +13,7 @@ interface SubscriptionModalProps {
 
 declare global {
   interface Window {
-    TossPayments: any;
+    PortOne: any;
   }
 }
 
@@ -25,17 +25,12 @@ export default function SubscriptionModal({
   userId,
 }: SubscriptionModalProps) {
   const [loading, setLoading] = useState(false);
-  const [tossPayments, setTossPayments] = useState<any>(null);
 
   useEffect(() => {
-    // 토스페이먼츠 SDK 로드
+    // 포트원 V2 SDK 로드
     const script = document.createElement('script');
-    script.src = 'https://js.tosspayments.com/v1/payment';
+    script.src = 'https://cdn.portone.io/v2/browser-sdk.js';
     script.async = true;
-    script.onload = () => {
-      const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY || 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
-      setTossPayments(window.TossPayments(clientKey));
-    };
     document.body.appendChild(script);
 
     return () => {
@@ -48,8 +43,14 @@ export default function SubscriptionModal({
   if (!isOpen) return null;
 
   const handleSubscribe = async () => {
-    if (!tossPayments || !userId) {
-      alert('결제 준비 중입니다. 잠시 후 다시 시도해주세요.');
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    const PortOne = window.PortOne;
+    if (!PortOne) {
+      alert('결제 모듈 로딩 중입니다. 잠시 후 다시 시도해주세요.');
       return;
     }
 
@@ -57,23 +58,55 @@ export default function SubscriptionModal({
 
     try {
       // 주문 ID 생성
-      const orderId = `sub_${userId}_${Date.now()}`;
-      const orderName = '재회 솔루션 월간 구독';
-      const amount = 1000; // 1,000원
+      const paymentId = `payment-${Date.now()}`;
 
-      // 토스페이먼츠 결제창 호출
-      await tossPayments.requestPayment('카드', {
-        amount,
-        orderId,
-        orderName,
-        customerName: '재회 솔루션 사용자',
-        successUrl: `${window.location.origin}/payment/success`,
-        failUrl: `${window.location.origin}/payment/fail`,
+      // 포트원 V2 결제 요청
+      const response = await PortOne.requestPayment({
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID || '',
+        paymentId: paymentId,
+        orderName: '재회 솔루션 월간 구독',
+        totalAmount: 1000,
+        currency: 'CURRENCY_KRW',
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY || '',
+        payMethod: 'EASY_PAY',
       });
+
+      if (response.code != null) {
+        // 결제 실패
+        alert(`결제에 실패했습니다: ${response.message}`);
+        setLoading(false);
+        return;
+      }
+
+      // 결제 성공 - 백엔드에서 검증
+      try {
+        const verifyResponse = await fetch('/api/payment/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentId: response.paymentId,
+            userId,
+          }),
+        });
+
+        const data = await verifyResponse.json();
+
+        if (data.success) {
+          alert('결제가 완료되었습니다!');
+          window.location.reload();
+        } else {
+          throw new Error(data.message || '결제 검증 실패');
+        }
+      } catch (error: any) {
+        console.error('결제 검증 실패:', error);
+        alert('결제 검증에 실패했습니다.');
+      }
+      setLoading(false);
     } catch (error: any) {
       console.error('결제 요청 실패:', error);
       alert('결제 요청에 실패했습니다. 다시 시도해주세요.');
-    } finally {
       setLoading(false);
     }
   };
