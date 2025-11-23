@@ -1,0 +1,35 @@
+# 연애 솔루션 - Robots.txt
+# 모든 검색엔진 크롤러 허용
+
+User-agent: *
+Allow: /
+Allow: /연애상담
+Allow: /재회상담
+Allow: /썸녀꼬시는법
+Allow: /짝사랑남꼬시는법
+Allow: /pricing
+Allow: /terms
+Allow: /privacy
+Allow: /refund
+
+# 크롤링 제외 경로
+Disallow: /api/
+Disallow: /auth/
+Disallow: /payment/
+Disallow: /profile
+
+# 크롤링 속도 조절 (초 단위)
+Crawl-delay: 1
+
+# Sitemap 위치
+Sitemap: https://date-consultant.vercel.app/sitemap.xml
+
+# 특정 봇에 대한 설정
+User-agent: Googlebot
+Allow: /
+
+User-agent: Yeti
+Allow: /
+
+User-agent: Naver
+Allow: /
