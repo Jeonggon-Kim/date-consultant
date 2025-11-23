@@ -9,6 +9,7 @@ interface SubscriptionModalProps {
   currentUsage: number;
   maxUsage: number;
   userId?: string;
+  onAuthRequired?: () => void;
 }
 
 declare global {
@@ -23,6 +24,7 @@ export default function SubscriptionModal({
   currentUsage,
   maxUsage,
   userId,
+  onAuthRequired,
 }: SubscriptionModalProps) {
   const [loading, setLoading] = useState(false);
 
@@ -46,7 +48,11 @@ export default function SubscriptionModal({
 
   const handleSubscribe = async () => {
     if (!userId) {
-      alert('로그인이 필요합니다.');
+      if (onAuthRequired) {
+        onAuthRequired();
+      } else {
+        alert('로그인이 필요합니다.');
+      }
       return;
     }
 
@@ -125,40 +131,42 @@ export default function SubscriptionModal({
           </p>
         </div>
 
-        <div className="bg-rose-50 rounded-lg p-4 mb-4">
-          <div className="text-center mb-3">
-            <p className="text-gray-600 text-xs mb-1">오늘 사용량</p>
-            <p className="text-2xl md:text-3xl font-bold text-rose-600">
-              {currentUsage} / {maxUsage}
-            </p>
-            <p className="text-gray-500 text-xs mt-1">메시지</p>
-          </div>
+        {userId && (
+          <div className="bg-rose-50 rounded-lg p-4 mb-4">
+            <div className="text-center mb-3">
+              <p className="text-gray-600 text-xs mb-1">오늘 사용량</p>
+              <p className="text-2xl md:text-3xl font-bold text-rose-600">
+                {currentUsage} / {maxUsage}
+              </p>
+              <p className="text-gray-500 text-xs mt-1">메시지</p>
+            </div>
 
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-            <div
-              className="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full transition-all"
-              style={{ width: `${Math.min((currentUsage / maxUsage) * 100, 100)}%` }}
-            ></div>
-          </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+              <div
+                className="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full transition-all"
+                style={{ width: `${Math.min((currentUsage / maxUsage) * 100, 100)}%` }}
+              ></div>
+            </div>
 
-          <p className="text-center text-rose-600 font-semibold text-sm">
-            오늘의 무료 사용량 {maxUsage}개를 모두 사용했습니다
-          </p>
-          <p className="text-center text-gray-500 text-xs mt-1">
-            내일 자정이 되면 다시 무료로 사용하실 수 있습니다
-          </p>
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-center text-blue-800 text-xs font-semibold mb-1">
-              💝 후원 계좌
+            <p className="text-center text-rose-600 font-semibold text-sm">
+              오늘의 무료 사용량 {maxUsage}개를 모두 사용했습니다
             </p>
-            <p className="text-center text-blue-700 text-xs">
-              우리은행 1002-138843279
+            <p className="text-center text-gray-500 text-xs mt-1">
+              내일 자정이 되면 다시 무료로 사용하실 수 있습니다
             </p>
-            <p className="text-center text-blue-600 text-xs font-medium">
-              김정곤
-            </p>
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-center text-blue-800 text-xs font-semibold mb-1">
+                💝 후원 계좌
+              </p>
+              <p className="text-center text-blue-700 text-xs">
+                우리은행 1002-138843279
+              </p>
+              <p className="text-center text-blue-600 text-xs font-medium">
+                김정곤
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg p-4 mb-4 border-2 border-rose-200">
           <div className="text-center mb-3">
@@ -204,10 +212,9 @@ export default function SubscriptionModal({
         <div className="space-y-2">
           <button
             onClick={handleSubscribe}
-            disabled={true}
-            className="w-full bg-gradient-to-r from-gray-300 to-gray-300 text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg cursor-not-allowed transition-all shadow-lg"
+            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:from-rose-600 hover:to-pink-600 transition-all shadow-lg"
           >
-            구독 서비스 준비 중
+            지금 구독하기
           </button>
 
           <button

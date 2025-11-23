@@ -738,8 +738,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => {
-                  setAuthModalSignUpOnly(true);
-                  setShowAuthModal(true);
+                  setShowSubscriptionModal(true);
                 }}
                 className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-premium-lg shadow-premium-md transition-all duration-300 relative overflow-hidden group"
               >
@@ -888,6 +887,11 @@ export default function Home() {
         currentUsage={monthlyUsage}
         maxUsage={CHAT_LIMITS.FREE_USER_MESSAGE_LIMIT}
         userId={user?.id}
+        onAuthRequired={() => {
+          setShowSubscriptionModal(false);
+          setAuthModalSignUpOnly(true);
+          setShowAuthModal(true);
+        }}
       />
 
       {/* Review Modal */}
