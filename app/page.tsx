@@ -440,7 +440,11 @@ export default function Home() {
     }
 
     // 로그인 + 비구독 유저의 사용량 체크
-    if (user && !isSubscribed && monthlyUsage >= CHAT_LIMITS.FREE_USER_MESSAGE_LIMIT) {
+    if (
+      user &&
+      !isSubscribed &&
+      monthlyUsage >= CHAT_LIMITS.FREE_USER_MESSAGE_LIMIT
+    ) {
       console.log("[메시지] 무료 사용량 초과");
       setShowSubscriptionModal(true);
       return;
@@ -532,7 +536,10 @@ export default function Home() {
         console.log("[메시지] 사용량 증가 완료. 현재 사용량:", newUsageCount);
 
         // 리뷰 트리거 체크
-        if (!isSubscribed && newUsageCount === CHAT_LIMITS.REVIEW_TRIGGER_COUNT) {
+        if (
+          !isSubscribed &&
+          newUsageCount === CHAT_LIMITS.REVIEW_TRIGGER_COUNT
+        ) {
           console.log("[리뷰] 리뷰 트리거 조건 충족. 사용량:", newUsageCount);
           // 오늘 이미 리뷰를 작성했는지 확인
           const hasReviewedToday = await checkTodayReview(user.id);
@@ -710,7 +717,8 @@ export default function Home() {
                   연애 솔루션
                 </h1>
                 <p className="text-purple-600/80 text-sm mt-0.5 font-medium tracking-wide">
-                  AI 기반 전문 상담 서비스
+                  짝사랑, 재회, 관계 회복, 이별 극복 등 연애 전문가가 만든 AI
+                  기반 전문 상담 서비스
                 </p>
               </div>
             </div>
