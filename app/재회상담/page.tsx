@@ -21,7 +21,7 @@ export default function ReunionCounselingPage() {
     <div className="min-h-screen bg-gradient-premium">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 px-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 pointer-events-none"></div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-extrabold text-gradient mb-6 leading-tight">
             재회 상담 전문
@@ -34,12 +34,12 @@ export default function ReunionCounselingPage() {
             </span>
             가 당신의 재회를 도와드립니다
           </p>
-          <Link
+          <a
             href="/"
             className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 hover:scale-105"
           >
             지금 무료로 재회 상담 시작 →
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -294,12 +294,12 @@ export default function ReunionCounselingPage() {
           <p className="text-xl text-gray-600 mb-8">
             당신의 재회 가능성을 분석하고, 구체적인 전략을 제시해드립니다
           </p>
-          <Link
+          <a
             href="/"
             className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white px-12 py-5 rounded-2xl font-bold text-xl shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 hover:scale-105"
           >
             무료 재회 상담 시작 💕
-          </Link>
+          </a>
         </div>
 
         {/* SEO Content */}

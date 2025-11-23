@@ -38,7 +38,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 npm run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 애플리케이션을 확인하세요.
+브라우저에서 [http://date-consultant.vercel.app](http://date-consultant.vercel.app)을 열어 애플리케이션을 확인하세요.
 
 ## 기능
 

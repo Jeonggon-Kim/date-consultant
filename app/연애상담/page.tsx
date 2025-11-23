@@ -21,7 +21,7 @@ export default function RelationshipCounselingPage() {
     <div className="min-h-screen bg-gradient-premium">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 px-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 pointer-events-none"></div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-extrabold text-gradient mb-6 leading-tight">
             연애 상담 전문 AI
@@ -34,12 +34,12 @@ export default function RelationshipCounselingPage() {
             </span>{" "}
             당신의 연애 고민을 해결합니다
           </p>
-          <Link
+          <a
             href="/"
             className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 hover:scale-105"
           >
             지금 무료로 상담 시작하기 →
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -179,12 +179,12 @@ export default function RelationshipCounselingPage() {
           <p className="text-xl text-gray-600 mb-8">
             첫 상담은 무료입니다. 로그인 없이도 바로 시작할 수 있어요!
           </p>
-          <Link
+          <a
             href="/"
             className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white px-12 py-5 rounded-2xl font-bold text-xl shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 hover:scale-105"
           >
             연애 상담 시작하기 💕
-          </Link>
+          </a>
         </div>
 
         {/* SEO Content */}
