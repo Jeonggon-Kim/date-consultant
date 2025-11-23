@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import SubscriptionModal from "@/app/components/SubscriptionModal";
+import { CHAT_LIMITS } from "@/config/limits";
 
 interface SubscriptionInfo {
   is_subscribed: boolean;
@@ -18,6 +19,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [monthlyUsage, setMonthlyUsage] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -32,6 +34,7 @@ export default function ProfilePage() {
 
       setUser(session.user);
       await loadSubscriptionInfo(session.user.id);
+      await loadMonthlyUsage(session.user.id);
       setLoading(false);
     };
 
@@ -54,6 +57,34 @@ export default function ProfilePage() {
       setSubscriptionInfo(data as SubscriptionInfo);
     } catch (error) {
       console.error("구독 정보 로드 실패:", error);
+    }
+  };
+
+  const loadMonthlyUsage = async (userId: string) => {
+    try {
+      const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      const { data, error } = await supabase
+        .from("usage_tracking")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("month", today)
+        .single();
+
+      if (error) {
+        if ((error as any).code === "PGRST116") {
+          // 오늘 사용량 레코드 없음
+          setMonthlyUsage(0);
+          return;
+        }
+        console.error("사용량 조회 실패:", error);
+        return;
+      }
+
+      const usage = data as any;
+      setMonthlyUsage(usage.message_count || 0);
+    } catch (error) {
+      console.error("사용량 로드 실패:", error);
+      setMonthlyUsage(0);
     }
   };
 
@@ -247,8 +278,8 @@ export default function ProfilePage() {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
-        currentUsage={0}
-        maxUsage={10}
+        currentUsage={monthlyUsage}
+        maxUsage={CHAT_LIMITS.FREE_USER_MESSAGE_LIMIT}
         userId={user?.id}
       />
     </div>

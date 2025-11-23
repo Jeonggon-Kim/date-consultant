@@ -6,6 +6,7 @@ import ChatInput from "./components/ChatInput";
 import AuthModal from "./components/AuthModal";
 import ChatHistorySidebar from "./components/ChatHistorySidebar";
 import SubscriptionModal from "./components/SubscriptionModal";
+import ReviewModal from "./components/ReviewModal";
 import UserMenu from "./components/UserMenu";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -26,6 +27,7 @@ export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalSignUpOnly, setAuthModalSignUpOnly] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -258,7 +260,7 @@ export default function Home() {
   };
 
   // 사용량 증가
-  const incrementUsage = async (userId: string) => {
+  const incrementUsage = async (userId: string): Promise<number> => {
     try {
       const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 
@@ -285,6 +287,7 @@ export default function Home() {
           })
           .eq("id", usage.id);
         setMonthlyUsage(newCount);
+        return newCount;
       } else {
         await supabase.from("usage_tracking").insert({
           user_id: userId,
@@ -292,9 +295,35 @@ export default function Home() {
           message_count: 1,
         });
         setMonthlyUsage(1);
+        return 1;
       }
     } catch (error) {
       console.error("사용량 증가 실패:", error);
+      return monthlyUsage;
+    }
+  };
+
+  // 오늘 리뷰 작성 여부 확인
+  const checkTodayReview = async (userId: string): Promise<boolean> => {
+    try {
+      const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("id")
+        .eq("user_id", userId)
+        .gte("created_at", `${today}T00:00:00`)
+        .lt("created_at", `${today}T23:59:59`)
+        .limit(1);
+
+      if (error) {
+        console.error("[리뷰] 오늘 리뷰 확인 실패:", error);
+        return false;
+      }
+
+      return data && data.length > 0;
+    } catch (error) {
+      console.error("[리뷰] 오늘 리뷰 확인 실패:", error);
+      return false;
     }
   };
 
@@ -499,8 +528,21 @@ export default function Home() {
       // 로그인한 유저의 사용량 증가
       if (user) {
         console.log("[메시지] 사용량 증가 시작");
-        await incrementUsage(user.id);
-        console.log("[메시지] 사용량 증가 완료");
+        const newUsageCount = await incrementUsage(user.id);
+        console.log("[메시지] 사용량 증가 완료. 현재 사용량:", newUsageCount);
+
+        // 리뷰 트리거 체크
+        if (!isSubscribed && newUsageCount === CHAT_LIMITS.REVIEW_TRIGGER_COUNT) {
+          console.log("[리뷰] 리뷰 트리거 조건 충족. 사용량:", newUsageCount);
+          // 오늘 이미 리뷰를 작성했는지 확인
+          const hasReviewedToday = await checkTodayReview(user.id);
+          if (!hasReviewedToday) {
+            console.log("[리뷰] 리뷰 모달 표시");
+            setShowReviewModal(true);
+          } else {
+            console.log("[리뷰] 오늘 이미 리뷰 작성함");
+          }
+        }
       }
       console.log("[메시지] 메시지 전송 완료");
     } catch (error: any) {
@@ -839,6 +881,15 @@ export default function Home() {
         maxUsage={CHAT_LIMITS.FREE_USER_MESSAGE_LIMIT}
         userId={user?.id}
       />
+
+      {/* Review Modal */}
+      {user && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 }
