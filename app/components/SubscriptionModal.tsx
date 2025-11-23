@@ -40,6 +40,8 @@ export default function SubscriptionModal({
     };
   }, []);
 
+  console.log('[SubscriptionModal] maxUsage:', maxUsage, 'currentUsage:', currentUsage);
+
   if (!isOpen) return null;
 
   const handleSubscribe = async () => {
@@ -145,6 +147,17 @@ export default function SubscriptionModal({
           <p className="text-center text-gray-500 text-xs mt-1">
             내일 자정이 되면 다시 무료로 사용하실 수 있습니다
           </p>
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-center text-blue-800 text-xs font-semibold mb-1">
+              💝 후원 계좌
+            </p>
+            <p className="text-center text-blue-700 text-xs">
+              우리은행 1002-138843279
+            </p>
+            <p className="text-center text-blue-600 text-xs font-medium">
+              김정곤
+            </p>
+          </div>
         </div>
 
         <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg p-4 mb-4 border-2 border-rose-200">

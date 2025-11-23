@@ -195,7 +195,7 @@ export default function PricingPage() {
                     />
                   </svg>
                   <span className="text-gray-700">
-                    일일 30회 메시지 제한
+                    일일 15회 메시지 제한
                   </span>
                 </li>
                 <li className="flex items-start gap-2">

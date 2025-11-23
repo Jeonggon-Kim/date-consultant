@@ -9,13 +9,12 @@ import SubscriptionModal from "./components/SubscriptionModal";
 import UserMenu from "./components/UserMenu";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { CHAT_LIMITS } from "@/config/limits";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
-
-const FREE_MESSAGE_LIMIT = 30; // 무료 사용자 메시지 제한 (현재는 날짜 기준)
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -401,8 +400,10 @@ export default function Home() {
 
     console.log("[메시지] 메시지 전송 시작");
 
-    // 비로그인 유저의 메시지 제한 체크 (user+assistant 포함 10개)
-    if (!user && messages.length >= 10) {
+    // 비로그인 유저의 메시지 제한 체크
+    // messages.length에는 user + assistant 메시지가 모두 포함되므로 * 2
+    const guestMessageLimit = CHAT_LIMITS.GUEST_MESSAGE_LIMIT * 2;
+    if (!user && messages.length >= guestMessageLimit) {
       console.log("[메시지] 비로그인 사용자 제한 도달");
       alert("계속 상담하시려면 로그인해주세요.");
       setShowAuthModal(true);
@@ -410,7 +411,7 @@ export default function Home() {
     }
 
     // 로그인 + 비구독 유저의 사용량 체크
-    if (user && !isSubscribed && monthlyUsage >= FREE_MESSAGE_LIMIT) {
+    if (user && !isSubscribed && monthlyUsage >= CHAT_LIMITS.FREE_USER_MESSAGE_LIMIT) {
       console.log("[메시지] 무료 사용량 초과");
       setShowSubscriptionModal(true);
       return;
@@ -520,7 +521,7 @@ export default function Home() {
     const welcomeMessage: Message = {
       role: "assistant",
       content:
-        "새로운 상담을 시작해볼게요. 🙂\n\n연애 고민이 있으시다면 편하게 말씀해 주세요. 재회, 연애 시작, 관계 유지 등 모든 고민을 함께 나눠요.",
+        "안녕하세요! 연애 전문 상담사입니다. 💕\n\n연애 고민, 재회, 관계 회복 등 어떤 이야기든 편하게 나눠주세요. 함께 해결책을 찾아드릴게요!\n\n한 번에 사연을 너무 길게 보내면 더 좋은 상담이 어려워요. 저를 편안한 대화상대라 생각해주세요.\n먼저 나이, 성별, 상대방 나이 그리고 어떠한 고민(재회, 썸남, 썸녀, 짝사랑, 이별 슬픔, 등)인지 말씀해주세요!",
     };
     setMessages([welcomeMessage]);
   };
@@ -542,7 +543,7 @@ export default function Home() {
       const welcomeMessage: Message = {
         role: "assistant",
         content:
-          "안녕하세요! 연애 전문 상담사입니다. 💕\n\n연애 고민, 재회, 관계 회복 등 어떤 이야기든 편하게 나눠주세요. 함께 해결책을 찾아드릴게요!",
+          "안녕하세요! 연애 전문 상담사입니다. 💕\n\n연애 고민, 재회, 관계 회복 등 어떤 이야기든 편하게 나눠주세요. 함께 해결책을 찾아드릴게요!\n\n한 번에 사연을 너무 길게 보내면 더 좋은 상담이 어려워요. 저를 편안한 대화상대라 생각해주세요.\n먼저 나이, 성별, 상대방 나이 그리고 어떠한 고민(재회, 썸남, 썸녀, 짝사랑, 이별 슬픔, 등)인지 말씀해주세요!",
       };
       setMessages([welcomeMessage]);
     }
@@ -551,25 +552,47 @@ export default function Home() {
   // URL 파라미터로 subscribe=true가 있으면 구독 모달 열기
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("subscribe") === "true" && user) {
+    // 데이터 로딩이 완료되고, user가 있고, subscribe 파라미터가 있을 때만 모달 열기
+    if (
+      params.get("subscribe") === "true" &&
+      user &&
+      !authLoading &&
+      !dataLoading
+    ) {
       setShowSubscriptionModal(true);
       // URL에서 파라미터 제거
       window.history.replaceState({}, "", "/");
     }
-  }, [user]);
+  }, [user, authLoading, dataLoading]);
 
   // ❗ 이제는 authLoading/dataLoading이 UI를 막지 않음
   return (
     <div className="flex h-screen bg-gradient-premium relative overflow-hidden">
       {/* 배경 장식 요소 - 초반에만 나타났다 사라짐 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-40 w-80 h-80 bg-purple-200/40 rounded-full mix-blend-normal filter blur-3xl opacity-0 animate-fadeIn" style={{animation: 'fadeIn 2s ease-out forwards, fadeOut 2s ease-out 15s forwards'}}></div>
-        <div className="absolute top-0 -right-40 w-80 h-80 bg-pink-200/30 rounded-full mix-blend-normal filter blur-3xl opacity-0 delay-100" style={{animation: 'fadeIn 2s ease-out 0.5s forwards, fadeOut 2s ease-out 17.5s forwards'}}></div>
+        <div
+          className="absolute top-0 -left-40 w-80 h-80 bg-purple-200/40 rounded-full mix-blend-normal filter blur-3xl opacity-0 animate-fadeIn"
+          style={{
+            animation:
+              "fadeIn 2s ease-out forwards, fadeOut 2s ease-out 15s forwards",
+          }}
+        ></div>
+        <div
+          className="absolute top-0 -right-40 w-80 h-80 bg-pink-200/30 rounded-full mix-blend-normal filter blur-3xl opacity-0 delay-100"
+          style={{
+            animation:
+              "fadeIn 2s ease-out 0.5s forwards, fadeOut 2s ease-out 17.5s forwards",
+          }}
+        ></div>
       </div>
       <style jsx>{`
         @keyframes fadeOut {
-          from { opacity: 0.15; }
-          to { opacity: 0; }
+          from {
+            opacity: 0.15;
+          }
+          to {
+            opacity: 0;
+          }
         }
       `}</style>
       {/* Sidebar - 로그인한 사용자만 표시 */}
@@ -725,7 +748,8 @@ export default function Home() {
                   연애 상담을 시작해보세요
                 </h2>
                 <p className="text-gray-500 text-base leading-relaxed">
-                  AI 전문 상담사가 여러분의 연애 고민을<br />
+                  AI 전문 상담사가 여러분의 연애 고민을
+                  <br />
                   함께 해결해드립니다
                 </p>
                 <div className="mt-8 flex items-center justify-center gap-2 text-sm text-gray-400">
@@ -752,7 +776,9 @@ export default function Home() {
                         <div className="w-3 h-3 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full animate-bounce delay-100 shadow-premium-sm"></div>
                         <div className="w-3 h-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full animate-bounce delay-200 shadow-premium-sm"></div>
                       </div>
-                      <span className="text-sm text-purple-600/70 font-medium">AI가 답변 중...</span>
+                      <span className="text-sm text-purple-600/70 font-medium">
+                        AI가 답변 중...
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -771,19 +797,32 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-blue-500/5"></div>
             <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-xs text-gray-600 relative z-10">
               <span className="font-medium">
-                솔(SOL) | 사업자: 337-03-03814 | 대표: 김정곤 | 전화: 010-8348-0132
+                솔(SOL) | 사업자: 337-03-03814 | 대표: 김정곤 | 전화:
+                010-8348-0132
               </span>
               <div className="flex gap-4">
-                <a href="/pricing" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
+                <a
+                  href="/pricing"
+                  className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline"
+                >
                   상품안내
                 </a>
-                <a href="/terms" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
+                <a
+                  href="/terms"
+                  className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline"
+                >
                   이용약관
                 </a>
-                <a href="/privacy" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
+                <a
+                  href="/privacy"
+                  className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline"
+                >
                   개인정보처리방침
                 </a>
-                <a href="/refund" className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline">
+                <a
+                  href="/refund"
+                  className="hover:text-purple-600 transition-all duration-200 font-medium hover:underline"
+                >
                   환불정책
                 </a>
               </div>
@@ -797,7 +836,7 @@ export default function Home() {
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
         currentUsage={monthlyUsage}
-        maxUsage={FREE_MESSAGE_LIMIT}
+        maxUsage={CHAT_LIMITS.FREE_USER_MESSAGE_LIMIT}
         userId={user?.id}
       />
     </div>
