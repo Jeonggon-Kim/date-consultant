@@ -83,8 +83,16 @@ export default function PricingPage() {
                 <p className="text-gray-600">무제한 AI 상담 서비스</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-rose-600">1,000원</p>
-                <p className="text-sm text-gray-500">/ 월</p>
+                <div className="flex flex-col items-end">
+                  <span className="text-sm text-gray-400 line-through">4,900원</span>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                      🚀 런칭 특가
+                    </span>
+                    <p className="text-3xl font-bold text-rose-600">1,000원</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">/ 월 (선착순 100명)</p>
               </div>
             </div>
 

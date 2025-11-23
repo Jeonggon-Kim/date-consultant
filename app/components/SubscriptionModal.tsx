@@ -162,7 +162,13 @@ export default function SubscriptionModal({
 
         <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg p-4 mb-4 border-2 border-rose-200">
           <div className="text-center mb-3">
-            <p className="text-3xl md:text-4xl font-bold text-rose-600">월 1,000원</p>
+            <div className="inline-block bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full mb-1 animate-pulse">
+              🚀 런칭 기념 특가 (선착순 100명)
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-gray-400 line-through text-lg">4,900원</span>
+              <p className="text-3xl md:text-4xl font-bold text-rose-600">월 1,000원</p>
+            </div>
             <p className="text-gray-600 text-xs md:text-sm mt-1">VAT 포함</p>
           </div>
 

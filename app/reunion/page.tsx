@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { APP_URL } from "@/config/app";
 
 export const metadata: Metadata = {
   title: "재회 상담 전문 - 헤어진 연인과 다시 만나는 방법 | 연애 솔루션",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     title: "재회 상담 전문 - 헤어진 연인과 다시 만나는 방법",
     description:
       "헤어진 연인과의 재회, 전문가의 체계적인 전략으로 성공 확률을 높이세요",
-    url: "https://date-consultant.vercel.app/재회상담",
+    url: `${APP_URL}/재회상담`,
     type: "website",
   },
 };
@@ -34,6 +35,22 @@ export default function ReunionCounselingPage() {
             </span>
             가 당신의 재회를 도와드립니다
           </p>
+
+          {/* Special Reasons */}
+          <div className="grid gap-3 mb-8 text-left max-w-lg mx-auto bg-white/50 p-6 rounded-2xl backdrop-blur-sm border border-white/50 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">👩‍❤️‍👨</span>
+              <span className="text-gray-700 font-medium">실제 재회 상담사가 설계한 AI 상담</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xl">💌</span>
+              <span className="text-gray-700 font-medium">내 상황에 맞는 카톡 답장/연락 타이밍 제안</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🌙</span>
+              <span className="text-gray-700 font-medium">심야에도 눈치 안 보고 24시간 익명 상담</span>
+            </div>
+          </div>
           <a
             href="/"
             className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-premium-lg hover:shadow-premium-xl transition-all duration-300 hover:scale-105"
@@ -356,6 +373,36 @@ export default function ReunionCounselingPage() {
               포기하고 앞으로 나아가는 방법도 함께 제시합니다. 진정으로 당신의
               행복을 위한 최선의 선택이 무엇인지 함께 고민하겠습니다.
             </p>
+          </div>
+        </div>
+
+        {/* Trust & Safety */}
+        <div className="mt-16 border-t border-gray-200 pt-12">
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
+            안심하고 상담하세요
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div className="p-4">
+              <div className="text-3xl mb-3">🔒</div>
+              <h3 className="font-bold text-gray-800 mb-2">철저한 비밀 보장</h3>
+              <p className="text-gray-600 text-sm">
+                상담 내용은 모두 비공개로 안전하게 저장되며, 외부로 유출되지 않습니다.
+              </p>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl mb-3">🛡️</div>
+              <h3 className="font-bold text-gray-800 mb-2">개인정보 보호</h3>
+              <p className="text-gray-600 text-sm">
+                연락처나 실명 등 민감한 개인정보는 일체 요구하지 않습니다.
+              </p>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl mb-3">⚕️</div>
+              <h3 className="font-bold text-gray-800 mb-2">이용 가이드</h3>
+              <p className="text-gray-600 text-sm">
+                AI는 의료·심리치료를 대체하지 않으며, 위기 상황일 경우 전문가의 도움을 요청하세요.
+              </p>
+            </div>
           </div>
         </div>
       </section>

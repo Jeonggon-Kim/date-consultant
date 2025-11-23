@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
+import { APP_URL } from '@/config/app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://date-consultant.vercel.app';
+  const baseUrl = APP_URL;
   const currentDate = new Date();
 
   return [
