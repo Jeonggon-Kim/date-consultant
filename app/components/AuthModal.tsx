@@ -43,7 +43,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: 'https://date-consultant.vercel.app/auth/callback',
             data: {
               email_confirm: true, // 자동 확인
             },
