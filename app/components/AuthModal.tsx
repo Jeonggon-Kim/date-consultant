@@ -180,7 +180,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
           </button>
         </form>
 
-        {/* 소셜 로그인 구분선 */}
+        {/* 소셜 로그인 구분선 - 비즈니스 인증 완료 후 활성화 */}
+        {/* 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
@@ -190,7 +191,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
           </div>
         </div>
 
-        {/* 카카오 로그인 버튼 */}
+        카카오 로그인 버튼 - 비즈니스 인증 완료 후 활성화
         <button
           onClick={handleKakaoLogin}
           disabled={loading}
@@ -201,6 +202,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
           </svg>
           카카오 로그인
         </button>
+        */}
 
         <div className="mt-4 text-center">
           <button
