@@ -329,12 +329,8 @@ export default function Home() {
     }
   }, []);
 
-  // 채팅방 변경 시 해당 채팅방 메시지 로드
-  useEffect(() => {
-    if (currentChatId && user) {
-      loadChatMessages(currentChatId);
-    }
-  }, [currentChatId, user, loadChatMessages]);
+  // 채팅방 변경 시 메시지 로드는 handleChatSelect에서 처리
+  // (새 채팅방 생성 시 메시지가 사라지는 버그 방지)
 
   const createNewChat = async (userId?: string) => {
     const targetUserId = userId || user?.id;
@@ -432,11 +428,14 @@ export default function Home() {
       console.log("[메시지] API 호출 시작");
       // 로그인한 사용자면 채팅방 생성 또는 기존 채팅방 사용
       let chatId = currentChatId;
+      let isNewChat = false; // 새로 생성된 채팅방인지 추적
+      
       if (user && !chatId) {
         console.log("[메시지] 새 채팅방 생성 시작");
         chatId = await createNewChat();
         if (chatId) {
           console.log("[메시지] 새 채팅방 생성됨:", chatId);
+          isNewChat = true; // 새 채팅방 플래그 설정
           setCurrentChatId(chatId);
           setRefreshSidebar((prev) => prev + 1);
         } else {
@@ -509,8 +508,10 @@ export default function Home() {
     setMessages([welcomeMessage]);
   };
 
-  const handleChatSelect = (chatId: string) => {
+  const handleChatSelect = async (chatId: string) => {
     setCurrentChatId(chatId);
+    // 채팅방 선택 시 해당 채팅방의 메시지 로드
+    await loadChatMessages(chatId);
   };
 
   const handleLogout = async () => {
