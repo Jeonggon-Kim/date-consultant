@@ -620,18 +620,18 @@ export default function Home() {
 
       <div className="flex flex-col flex-1 relative z-10">
         {/* Header */}
-        <header className="glass-effect border-b border-white/20 shadow-premium-lg p-5 flex justify-between items-center relative z-50">
+        <header className="glass-effect border-b border-white/20 shadow-premium-lg p-3 md:p-5 flex justify-between items-center relative z-50">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 -z-10"></div>
-          <div className="flex items-center gap-4 relative z-10">
+          <div className="flex items-center gap-2 md:gap-4 relative z-10 flex-1 min-w-0">
             {/* 햄버거 메뉴 버튼 - 로그인한 사용자의 모바일에서만 표시 */}
             {user && (
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="md:hidden text-purple-600 hover:bg-purple-100 p-2.5 rounded-xl transition-all duration-300 hover:scale-105 shadow-premium-sm"
+                className="md:hidden text-purple-600 hover:bg-purple-100 p-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-premium-sm flex-shrink-0"
                 aria-label="메뉴 열기"
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -645,13 +645,13 @@ export default function Home() {
                 </svg>
               </button>
             )}
-            <div className="animate-fadeIn flex items-center gap-3">
-              <div className="text-5xl animate-pulse-soft">💕</div>
-              <div>
-                <h1 className="text-3xl font-extrabold text-gradient tracking-tight">
+            <div className="animate-fadeIn flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+              <div className="text-3xl md:text-5xl animate-pulse-soft flex-shrink-0">💕</div>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg md:text-3xl font-extrabold text-gradient tracking-tight truncate">
                   연애 솔루션
                 </h1>
-                <p className="text-purple-600/80 text-sm mt-0.5 font-medium tracking-wide">
+                <p className="text-purple-600/80 text-xs md:text-sm mt-0.5 font-medium tracking-wide hidden sm:block">
                   짝사랑, 재회, 관계 회복, 이별 극복 등 연애 전문가가 만든 AI
                   기반 전문 상담 서비스
                 </p>
@@ -661,13 +661,13 @@ export default function Home() {
           {user ? (
             <UserMenu onLogout={handleLogout} />
           ) : (
-            <div className="flex gap-3 relative z-10">
+            <div className="flex gap-2 md:gap-3 relative z-10 flex-shrink-0">
               <button
                 onClick={() => {
                   setAuthModalSignUpOnly(false);
                   setShowAuthModal(true);
                 }}
-                className="glass-effect px-6 py-2.5 rounded-xl font-semibold text-purple-600 hover-lift shadow-premium-sm border border-purple-200/50 hover:border-purple-300/80 transition-all duration-300"
+                className="glass-effect px-3 md:px-6 py-2 md:py-2.5 rounded-xl font-semibold text-purple-600 hover-lift shadow-premium-sm border border-purple-200/50 hover:border-purple-300/80 transition-all duration-300 text-sm md:text-base whitespace-nowrap"
               >
                 로그인
               </button>
@@ -675,7 +675,7 @@ export default function Home() {
                 onClick={() => {
                   setShowSubscriptionModal(true);
                 }}
-                className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-premium-lg shadow-premium-md transition-all duration-300 relative overflow-hidden group"
+                className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-3 md:px-6 py-2 md:py-2.5 rounded-xl font-semibold hover:shadow-premium-lg shadow-premium-md transition-all duration-300 relative overflow-hidden group text-sm md:text-base whitespace-nowrap"
               >
                 <span className="relative z-10">구독하기</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
