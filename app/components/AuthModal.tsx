@@ -86,10 +86,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
       setLoading(true);
       setError(null);
       
+      // 프로덕션/개발 환경에 맞는 URL 사용
+      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${redirectUrl}/auth/callback`,
           // 카카오에서 제공하는 기본 정보만 요청 (이메일 제외)
           scopes: 'profile_nickname profile_image',
         },
