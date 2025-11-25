@@ -11,7 +11,7 @@
 1. 내 애플리케이션 → 앱 설정 → 플랫폼
 2. Web 플랫폼 등록
    - 사이트 도메인: `http://localhost:3000` (개발)
-   - 사이트 도메인: `https://your-domain.vercel.app` (프로덕션)
+   - 사이트 도메인: `https://date-consultant.vercel.app` (프로덕션)
 
 ### 1.3 카카오 로그인 활성화
 1. 제품 설정 → 카카오 로그인
@@ -19,15 +19,20 @@
 3. Redirect URI 설정:
    ```
    http://localhost:3000/auth/callback
-   https://your-domain.vercel.app/auth/callback
+   https://date-consultant.vercel.app/auth/callback
    ```
 
-### 1.4 동의 항목 설정
+### 1.4 동의 항목 설정 ⚠️ 중요!
 1. 제품 설정 → 카카오 로그인 → 동의 항목
-2. 필수 동의 항목:
-   - 닉네임 (선택 동의)
-   - 카카오계정(이메일) (필수 동의)
-   - 프로필 사진 (선택 동의)
+2. **필수 동의 항목** (이메일 권한 없이 사용):
+   - **닉네임** → "설정" 클릭 → **선택 동의** 활성화 ✅
+   - **프로필 사진** → "설정" 클릭 → **선택 동의** 활성화 ✅
+   
+3. **선택 사항** (비즈니스 인증 필요):
+   - 카카오계정(이메일) - 권한 없음 시 사용 안 함
+
+> **참고**: 이메일 수집은 카카오 비즈니스 인증이 필요합니다. 
+> 현재 구현은 닉네임과 프로필 사진만으로 로그인이 가능합니다.
 
 ### 1.5 REST API 키 확인
 1. 내 애플리케이션 → 앱 설정 → 앱 키
@@ -73,6 +78,8 @@ const handleKakaoLogin = async () => {
     provider: 'kakao',
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
+      // 카카오에서 제공하는 기본 정보만 요청 (이메일 제외)
+      scopes: 'profile_nickname profile_image',
     },
   });
 };
@@ -100,6 +107,13 @@ const handleKakaoLogin = async () => {
 ---
 
 ## 5. 문제 해결
+
+### "잘못된 요청 (KOE205)" 에러
+- **원인**: 설정하지 않은 동의 항목을 요청
+- **해결**: 
+  1. 카카오 개발자 콘솔 → 동의 항목
+  2. 닉네임, 프로필 사진을 "선택 동의"로 활성화
+  3. 이메일은 권한 없음이어도 괜찮음 (사용 안 함)
 
 ### "Invalid redirect_uri" 에러
 - 카카오 개발자 콘솔의 Redirect URI 설정 확인

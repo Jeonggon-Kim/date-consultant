@@ -90,6 +90,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
         provider: 'kakao',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          // 카카오에서 제공하는 기본 정보만 요청 (이메일 제외)
+          scopes: 'profile_nickname profile_image',
         },
       });
 
