@@ -68,10 +68,10 @@ export default function SubscriptionModal({
       // 빌링키 발급 ID 생성
       const billingKeyId = `billing-${userId}-${Date.now()}`;
 
-      // 포트원 V2 빌링키 발급 요청
+      // 포트원 V2 빌링키 발급 요청 (정기구독)
       const response = await PortOne.requestIssueBillingKey({
         storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID || '',
-        billingKeyMethod: 'EASY_PAY',
+        billingKeyMethod: 'CARD', // 일반 카드 결제 방식으로 빌링키 발급
         channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY || '',
         issueId: billingKeyId,
         issueName: '재회 솔루션 월간 구독',
@@ -103,7 +103,7 @@ export default function SubscriptionModal({
         const data = await verifyResponse.json();
 
         if (data.success) {
-          alert('구독이 완료되었습니다! 매월 자동으로 결제됩니다.');
+          alert('✅ 정기구독이 완료되었습니다!\n\n매월 자동으로 1,000원이 결제되며,\n언제든지 구독을 취소할 수 있습니다.');
           window.location.reload();
         } else {
           throw new Error(data.message || '구독 등록 실패');
@@ -178,7 +178,7 @@ export default function SubscriptionModal({
               <span className="text-gray-400 line-through text-lg">4,900원</span>
               <p className="text-3xl md:text-4xl font-bold text-rose-600">월 1,000원</p>
             </div>
-            <p className="text-gray-600 text-xs md:text-sm mt-1">VAT 포함</p>
+            <p className="text-gray-600 text-xs md:text-sm mt-1">정기구독 · VAT 포함</p>
           </div>
 
           <div className="space-y-2">
@@ -213,9 +213,10 @@ export default function SubscriptionModal({
         <div className="space-y-2">
           <button
             onClick={handleSubscribe}
-            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:from-rose-600 hover:to-pink-600 transition-all shadow-lg"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 md:py-4 rounded-lg font-bold text-base md:text-lg hover:from-rose-600 hover:to-pink-600 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            지금 구독하기
+            {loading ? '처리 중...' : '💳 정기구독 시작하기'}
           </button>
 
           <button
@@ -226,9 +227,14 @@ export default function SubscriptionModal({
           </button>
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-3">
-          구독하면 매일 무제한으로 이용 가능합니다
-        </p>
+        <div className="mt-3 space-y-1">
+          <p className="text-xs text-gray-600 text-center">
+            💡 <strong>정기구독 안내:</strong> 매월 자동으로 1,000원이 결제됩니다
+          </p>
+          <p className="text-xs text-gray-500 text-center">
+            언제든지 구독을 취소할 수 있으며, 취소 시 다음 결제가 중단됩니다
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -697,7 +697,9 @@ export default function Home() {
               setUser(session.user);
 
               // 비로그인 상태에서 쌓여 있던 메시지들을 새 채팅방으로 저장
-              if (messages.length > 0 && !currentChatId) {
+              // ✅ 실제 사용자 메시지가 있을 때만 저장 (환영 메시지만 있는 경우 제외)
+              const hasUserMessages = messages.some(msg => msg.role === 'user');
+              if (hasUserMessages && !currentChatId) {
                 const messagesToSave = [...messages]; // 현재 메시지 복사
                 const newChatId = await createNewChat(session.user.id);
                 if (newChatId) {
