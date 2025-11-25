@@ -81,6 +81,26 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
     }
   };
 
+  const handleKakaoLogin = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+      // OAuth는 리다이렉트되므로 여기서는 아무것도 하지 않음
+    } catch (error: any) {
+      setError(error.message || '카카오 로그인에 실패했습니다');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
@@ -157,6 +177,28 @@ export default function AuthModal({ isOpen, onClose, onSuccess, signUpOnly = fal
             {loading ? '처리 중...' : isSignUp ? '가입하기' : '로그인'}
           </button>
         </form>
+
+        {/* 소셜 로그인 구분선 */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">또는</span>
+          </div>
+        </div>
+
+        {/* 카카오 로그인 버튼 */}
+        <button
+          onClick={handleKakaoLogin}
+          disabled={loading}
+          className="w-full bg-[#FEE500] text-[#000000] py-3 rounded-lg font-semibold hover:bg-[#FDD835] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 3C5.58172 3 2 5.89543 2 9.5C2 11.6484 3.23828 13.5391 5.16406 14.6953L4.30469 17.7109C4.23438 17.9453 4.49219 18.1328 4.69531 17.9922L8.35156 15.6016C8.89062 15.6875 9.44531 15.7344 10 15.7344C14.4183 15.7344 18 12.8389 18 9.23438C18 5.62988 14.4183 3 10 3Z" fill="currentColor"/>
+          </svg>
+          카카오 로그인
+        </button>
 
         <div className="mt-4 text-center">
           <button
