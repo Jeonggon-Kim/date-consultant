@@ -11,6 +11,7 @@ interface SubscriptionInfo {
   is_subscribed: boolean;
   subscription_start_date: string | null;
   subscription_end_date: string | null;
+  cancel_at_period_end?: boolean;
 }
 
 export default function ProfilePage() {
@@ -112,6 +113,30 @@ export default function ProfilePage() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     return diffDays > 0 ? diffDays : 0;
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('정말로 구독을 취소하시겠습니까? 현재 구독 기간까지는 이용 가능하며, 다음 결제일부터 갱신되지 않습니다.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/subscription/cancel', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('구독 취소 실패');
+      }
+
+      alert('구독이 취소되었습니다.');
+      if (user) {
+        await loadSubscriptionInfo(user.id);
+      }
+    } catch (error) {
+      console.error('구독 취소 오류:', error);
+      alert('구독 취소 중 오류가 발생했습니다.');
+    }
   };
 
   if (loading) {
@@ -250,6 +275,31 @@ export default function ProfilePage() {
                   <span className="text-gray-600">
                     {formatDate(subscriptionInfo.subscription_end_date)}
                   </span>
+                </div>
+              )}
+
+              {/* 구독 취소 영역 */}
+              {isActive && (
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  {subscriptionInfo.cancel_at_period_end ? (
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="text-sm text-gray-600 font-medium">
+                        구독 해지가 예약되었습니다.
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(subscriptionInfo.subscription_end_date)}까지 이용 가능하며, 이후 자동 결제되지 않습니다.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleCancelSubscription}
+                        className="text-sm text-gray-400 underline hover:text-gray-600 transition-colors"
+                      >
+                        구독 해지
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

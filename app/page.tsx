@@ -149,21 +149,8 @@ export default function Home() {
       if (error) {
         // PGRST116 = row 없음 (Supabase에서 "Single row expected, none found")
         if ((error as any).code === "PGRST116") {
-          console.log("[구독] 기존 구독 정보 없음 - 새 레코드 생성");
-
-          const { error: insertError } = await supabase
-            .from("subscriptions")
-            .insert({
-              user_id: userId,
-              is_subscribed: false,
-            });
-
-          if (insertError) {
-            console.error("[구독] 새 레코드 생성 실패:", insertError);
-          }
-
+          console.log("[구독] 기존 구독 정보 없음 - 기본값(false) 적용");
           setIsSubscribed(false);
-          console.log("[구독] 기본값(is_subscribed = false) 적용");
           return;
         }
 
@@ -219,22 +206,8 @@ export default function Home() {
       if (error) {
         // row 없음 → 새 레코드 생성
         if ((error as any).code === "PGRST116") {
-          console.log("[사용량] 기존 사용량 레코드 없음 - 새로 생성");
-
-          const { error: insertError } = await supabase
-            .from("usage_tracking")
-            .insert({
-              user_id: userId,
-              month: today,
-              message_count: 0,
-            });
-
-          if (insertError) {
-            console.error("[사용량] 새 레코드 생성 실패:", insertError);
-          }
-
+          console.log("[사용량] 기존 사용량 레코드 없음 - 0으로 처리");
           setMonthlyUsage(0);
-          console.log("[사용량] 기본값(0) 적용");
           return;
         }
 
@@ -471,83 +444,44 @@ export default function Home() {
         }
       }
 
-      // 사용자 메시지 저장
-      if (user && chatId) {
-        console.log("[메시지] 사용자 메시지 저장 중...");
-        await saveMessage(chatId, "user", content);
-        console.log("[메시지] 사용자 메시지 저장 완료");
-      }
+
 
       console.log("[메시지] OpenAI API 호출 중...");
-      // 30초 타임아웃 설정
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("API 요청 시간 초과 (30초)")), 30000)
-      );
-
-      const fetchPromise = fetch("/api/chat", {
+      
+      // 3. API 호출 (메시지 전송 및 저장, 사용량 업데이트가 서버에서 처리됨)
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           messages: newMessages,
+          chatId: currentChatId, // chatId 전달
         }),
       });
 
-      const response = (await Promise.race([
-        fetchPromise,
-        timeoutPromise,
-      ])) as Response;
-
-      console.log("[메시지] API 응답 수신:", response.status);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("[메시지] API 오류 응답:", errorText);
-        throw new Error(`API 요청 실패: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || "API 요청 실패");
       }
 
       const data = await response.json();
-      console.log("[메시지] 응답 데이터 파싱 완료");
+      const assistantMessage = data.message;
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      // 4. 응답 메시지 UI 추가
+      setMessages((prev) => [...prev, assistantMessage]);
 
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: data.message.content,
-      };
-
-      const updatedMessages = [...newMessages, assistantMessage];
-      setMessages(updatedMessages);
-
-      // AI 응답 저장
-      if (user && chatId) {
-        console.log("[메시지] AI 응답 저장 중...");
-        await saveMessage(chatId, "assistant", data.message.content);
-        console.log("[메시지] AI 응답 저장 완료");
-      }
-
-      // 로그인한 유저의 사용량 증가
+      // 5. 사용량 UI 업데이트 (서버에서 이미 업데이트됨, 클라이언트 상태만 동기화)
       if (user) {
-        console.log("[메시지] 사용량 증가 시작");
-        const newUsageCount = await incrementUsage(user.id);
-        console.log("[메시지] 사용량 증가 완료. 현재 사용량:", newUsageCount);
-
-        // 리뷰 트리거 체크
-        if (
-          !isSubscribed &&
-          newUsageCount === CHAT_LIMITS.REVIEW_TRIGGER_COUNT
-        ) {
-          console.log("[리뷰] 리뷰 트리거 조건 충족. 사용량:", newUsageCount);
-          // 오늘 이미 리뷰를 작성했는지 확인
-          const hasReviewedToday = await checkTodayReview(user.id);
-          if (!hasReviewedToday) {
-            console.log("[리뷰] 리뷰 모달 표시");
+        // 간단히 1 증가시키거나, 정확성을 위해 다시 fetch 할 수 있음
+        setMonthlyUsage((prev) => prev + 1);
+        
+        // 리뷰 모달 체크
+        const currentCount = monthlyUsage + 1;
+        if (currentCount === CHAT_LIMITS.REVIEW_TRIGGER_COUNT) {
+          const hasReviewed = await checkTodayReview(user.id);
+          if (!hasReviewed) {
             setShowReviewModal(true);
-          } else {
-            console.log("[리뷰] 오늘 이미 리뷰 작성함");
           }
         }
       }
@@ -558,7 +492,7 @@ export default function Home() {
         role: "assistant",
         content: `오류가 발생했습니다: ${error.message}`,
       };
-      setMessages([...newMessages, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       console.log("[메시지] 로딩 종료");
       setIsLoading(false);

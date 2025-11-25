@@ -23,6 +23,7 @@ CREATE TABLE subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   is_subscribed BOOLEAN DEFAULT FALSE NOT NULL,
+  cancel_at_period_end BOOLEAN DEFAULT FALSE NOT NULL,
   subscription_start_date TIMESTAMP WITH TIME ZONE,
   subscription_end_date TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,

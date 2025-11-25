@@ -65,36 +65,37 @@ export default function SubscriptionModal({
     setLoading(true);
 
     try {
-      // 주문 ID 생성
-      const paymentId = `payment-${Date.now()}`;
+      // 빌링키 발급 ID 생성
+      const billingKeyId = `billing-${userId}-${Date.now()}`;
 
-      // 포트원 V2 결제 요청
-      const response = await PortOne.requestPayment({
+      // 포트원 V2 빌링키 발급 요청
+      const response = await PortOne.requestIssueBillingKey({
         storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID || '',
-        paymentId: paymentId,
-        orderName: '재회 솔루션 월간 구독',
-        totalAmount: 1000,
-        currency: 'CURRENCY_KRW',
+        billingKeyMethod: 'EASY_PAY',
         channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY || '',
-        payMethod: 'EASY_PAY',
+        issueId: billingKeyId,
+        issueName: '재회 솔루션 월간 구독',
+        customer: {
+          customerId: userId,
+        },
       });
 
       if (response.code != null) {
-        // 결제 실패
-        alert(`결제에 실패했습니다: ${response.message}`);
+        // 빌링키 발급 실패
+        alert(`구독 등록에 실패했습니다: ${response.message}`);
         setLoading(false);
         return;
       }
 
-      // 결제 성공 - 백엔드에서 검증
+      // 빌링키 발급 성공 - 백엔드에서 검증 및 첫 결제 진행
       try {
-        const verifyResponse = await fetch('/api/payment/verify', {
+        const verifyResponse = await fetch('/api/payment/subscribe', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            paymentId: response.paymentId,
+            billingKey: response.billingKey,
             userId,
           }),
         });
@@ -102,19 +103,19 @@ export default function SubscriptionModal({
         const data = await verifyResponse.json();
 
         if (data.success) {
-          alert('결제가 완료되었습니다!');
+          alert('구독이 완료되었습니다! 매월 자동으로 결제됩니다.');
           window.location.reload();
         } else {
-          throw new Error(data.message || '결제 검증 실패');
+          throw new Error(data.message || '구독 등록 실패');
         }
       } catch (error: any) {
-        console.error('결제 검증 실패:', error);
-        alert('결제 검증에 실패했습니다.');
+        console.error('구독 등록 실패:', error);
+        alert('구독 등록에 실패했습니다.');
       }
       setLoading(false);
     } catch (error: any) {
-      console.error('결제 요청 실패:', error);
-      alert('결제 요청에 실패했습니다. 다시 시도해주세요.');
+      console.error('구독 요청 실패:', error);
+      alert('구독 요청에 실패했습니다. 다시 시도해주세요.');
       setLoading(false);
     }
   };
