@@ -216,7 +216,17 @@ export default function ChatHistorySidebar({
           <p className="font-semibold">솔(SOL)</p>
           <p>사업자: 337-03-03814</p>
           <p>대표: 김정곤</p>
-          <p>전화: 010-8348-0132</p>
+          <p>
+            고객센터:{" "}
+            <a 
+              href="https://open.kakao.com/o/sEgKYL3h" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-700 underline font-semibold"
+            >
+              카카오톡 상담
+            </a>
+          </p>
         </div>
         <div className="mt-2 pt-2 border-t border-rose-300 space-y-1">
           <a

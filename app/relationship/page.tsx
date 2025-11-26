@@ -292,8 +292,15 @@ export default function RelationshipCounselingPage() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-sm text-gray-600">
             <span className="font-medium">
-              솔(SOL) | 사업자: 337-03-03814 | 대표: 김정곤 | 전화:
-              010-8348-0132
+              솔(SOL) | 사업자: 337-03-03814 | 대표: 김정곤 | 고객센터:{" "}
+              <a 
+                href="https://open.kakao.com/o/sEgKYL3h" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:text-purple-700 underline"
+              >
+                카카오톡 상담
+              </a>
             </span>
             <div className="flex gap-4">
               <Link

@@ -178,7 +178,17 @@ export default function PrivacyPage() {
                 <ul className="space-y-1">
                   <li>성명: 김정곤</li>
                   <li>직책: 대표</li>
-                  <li>전화번호: 010-8348-0132</li>
+                  <li>
+                    고객센터:{" "}
+                    <a 
+                      href="https://open.kakao.com/o/sEgKYL3h" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 underline font-semibold"
+                    >
+                      카카오톡 상담
+                    </a>
+                  </li>
                   <li>
                     이용자는 회사의 서비스를 이용하며 발생하는 모든 개인정보보호
                     관련 민원을 개인정보 보호책임자에게 신고할 수 있습니다.

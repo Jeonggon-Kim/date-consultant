@@ -111,7 +111,14 @@ export default function RefundPage() {
                 <div className="bg-gray-50 p-4 rounded">
                   <p className="font-semibold mb-2">Step 1: 환불 요청</p>
                   <p className="text-sm">
-                    고객센터(010-8348-0132)로 전화 또는 이메일로 환불 요청
+                    <a 
+                      href="https://open.kakao.com/o/sEgKYL3h" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 underline"
+                    >
+                      고객센터(카카오톡)
+                    </a>로 환불 요청
                   </p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded">
@@ -194,7 +201,17 @@ export default function RefundPage() {
                   환불 관련 문의사항이 있으시면 언제든지 연락주시기 바랍니다:
                 </p>
                 <ul className="space-y-1">
-                  <li>전화: 010-8348-0132</li>
+                  <li>
+                    고객센터:{" "}
+                    <a 
+                      href="https://open.kakao.com/o/sEgKYL3h" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-rose-600 hover:text-rose-700 underline font-semibold"
+                    >
+                      카카오톡 상담
+                    </a>
+                  </li>
                   <li>운영 시간: 평일 09:00 - 18:00 (주말 및 공휴일 제외)</li>
                 </ul>
               </div>

@@ -65,7 +65,7 @@ export default function RootLayout({
     url: "https://date-consultant.vercel.app",
     logo: "https://date-consultant.vercel.app/logo.png",
     image: "https://date-consultant.vercel.app/og-image.png",
-    telephone: "010-8348-0132",
+    telephone: "카카오톡 상담: https://open.kakao.com/o/sEgKYL3h",
     priceRange: "무료 - 유료",
     address: {
       "@type": "PostalAddress",

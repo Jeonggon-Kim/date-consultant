@@ -17,7 +17,17 @@ export default function Footer() {
               주소: 서울특별시 성북구 고려대로27길 67, 6층 606호(안암동가,
               은스나우)
             </p>
-            <p>전화번호: 010-8348-0132</p>
+            <p>
+              고객센터:{" "}
+              <a 
+                href="https://open.kakao.com/o/sEgKYL3h" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-700 underline font-semibold"
+              >
+                카카오톡 상담
+              </a>
+            </p>
           </div>
         </div>
 
